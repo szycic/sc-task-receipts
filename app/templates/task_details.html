@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Task Details</title>
+</head>
+<body>
+    <h1>Task Details</h1>
+    <p>ID: {{ task.id }}</p>
+    <p>Project: {{ task.project }}</p>
+    <p>Priority: {{ task.priority }}</p>
+    <p>Title: {{ task.title }}</p>
+    <p>Created At: {{ task.created_at }}</p>
+    <p>Planned For: {{ task.planned_for }}</p>
+    <p>Due Date: {{ task.due_date }}</p>
+    <p>Description: {{ task.description }}</p>
+
+    <button id="unprint">UNMARK AS PRINTED</button>
+    <button id="done">MARK AS DONE</button>
+
+<script>
+document.getElementById("unprint").addEventListener("click", async () => {
+    const response = await fetch("/api/v1/tasks/{{ task.id }}/unprint", { method: "POST" });
+    const result = await response.json();
+    alert(result.message);
+    location.reload();
+});
+
+document.getElementById("done").addEventListener("click", async () => {
+    const response = await fetch("/api/v1/tasks/{{ task.id }}/done", { method: "POST" });
+    const result = await response.json();
+    alert(result.message);
+    location.reload();
+});
+</script>
+</body>
+</html>

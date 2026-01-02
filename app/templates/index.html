@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tasks Dashboard</title>
+</head>
+<body>
+    <h1>Tasks to Print</h1>
+    <button id="print-all">PRINT ALL</button>
+
+    <ul>
+        {% for task in tasks %}
+        <li>
+            <a href="/tasks/{{ task.id }}">{{ task.title }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+
+<script>
+document.getElementById("print-all").addEventListener("click", async () => {
+    const response = await fetch("/api/v1/tasks/print", { method: "POST" });
+    const result = await response.json();
+    alert(result.message);
+    location.reload(); // refresh page to update list
+});
+</script>
+</body>
+</html>
