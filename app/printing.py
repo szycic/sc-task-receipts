@@ -15,8 +15,8 @@ SPECIAL_INDENT = int(os.getenv("SPECIAL_INDENT", 4))
 PIXELS_MAP = {58: 384, 80: 576}
 MEDIA_WIDTH = PIXELS_MAP.get(PAPER_WIDTH_MM, 576)
 
-CHARS_PER_LINE_MAP = {58: 32, 80: 42}
-CHARS_PER_LINE = CHARS_PER_LINE_MAP.get(PAPER_WIDTH_MM, 42)
+CHARS_PER_LINE_MAP = {58: 32, 80: 48}
+CHARS_PER_LINE = CHARS_PER_LINE_MAP.get(PAPER_WIDTH_MM, 48)
 
 if not PRINTER_IP:
     raise ValueError("PRINTER_IP is not set in .env!")
@@ -38,18 +38,24 @@ def print_task_receipt(id: str, project: str, priority: str, title: str, created
     printer = Network(PRINTER_IP, PRINTER_PORT, media_width=MEDIA_WIDTH, timeout=10)
 
     # MAIN HEADER: Project
-    printer.set(align='center', width=2, height=2, bold=True)
+    printer._raw(b'\x1b\x40')  # ESC/POS command to initialize printer
+    printer._raw(b'\x1d\x21\x11')  # ESC/POS command for double width and height
+    printer._raw(b'\x1b\x45\x01')  # ESC/POS command for bold on
+    printer._raw(b'\x1b\x4d\x01') # ESC/POS command for emphasized mode on
+    printer.set(align='center')
     printer.text(f"{project}\n")
 
     # SECONDARY HEADER: Priority
-    printer.set(align='center', width=1, height=1, bold=True)
+    printer.set(align='center')
     printer.text(f"Priority: {priority}\n\n")
-    printer.set(bold=False)
+    printer._raw(b'\x1d\x21\x00') # ESC/POS command for normal size
+    printer._raw(b'\x1b\x45\x00')  # ESC/POS command for bold off
+    printer._raw(b'\x1b\x4d\x00') # ESC/POS command for emphasized mode off
     printer.text("-" * (PAPER_WIDTH_MM // 2) + "\n\n")
 
-    # TITLE
-    printer.set(align='left', width=1, height=1, bold=False)
-    printer.text(f"Title\n")
+    # TASK
+    printer.set(align='left')
+    printer.text(f"Task\n")
     wrapped_title = textwrap.wrap(title, width=CHARS_PER_LINE - SPECIAL_INDENT)
     for line in wrapped_title:
       printer.text(f"{' ' * SPECIAL_INDENT}{line}\n")
