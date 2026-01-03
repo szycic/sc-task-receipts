@@ -3,6 +3,7 @@ import textwrap
 from dotenv import load_dotenv
 from escpos.printer import Network
 from datetime import datetime
+from app.db import peek_next_receipt_number, commit_receipt_number, RECEIPT_NUMBER_RESET_AT
 
 load_dotenv()
 
@@ -21,11 +22,11 @@ CHARS_PER_LINE = CHARS_PER_LINE_MAP.get(PAPER_WIDTH_MM, 48)
 if not PRINTER_IP:
     raise ValueError("PRINTER_IP is not set in .env!")
 
-def print_task_receipt(id: str, project: str, priority: str, title: str, planned_start: str, due_date: str, description: str):
+
+def print_task_receipt(project: str, priority: str, title: str, planned_start: str, due_date: str, description: str):
   """Print a task receipt.
 
   Args:
-      id (str): The ID of the task.
       project (str): The project of the task.
       priority (str): The priority of the task.
       title (str): The title of the task.
@@ -35,12 +36,16 @@ def print_task_receipt(id: str, project: str, priority: str, title: str, planned
   """
   try:
     printer = Network(PRINTER_IP, PRINTER_PORT, media_width=MEDIA_WIDTH, timeout=10)
+    number = peek_next_receipt_number()
 
     # MAIN HEADER: Project
     printer._raw(b'\x1b\x40')  # ESC/POS command to initialize printer
-    printer._raw(b'\x1d\x21\x11')  # ESC/POS command for double width and height
     printer._raw(b'\x1b\x45\x01')  # ESC/POS command for bold on
     printer._raw(b'\x1b\x4d\x01') # ESC/POS command for emphasized mode on
+    printer._raw(b'\x1d\x21\x22')  # ESC/POS command for change width and height
+    printer.set(align='right')
+    printer.text(f"{str(number).zfill(len(str(RECEIPT_NUMBER_RESET_AT)))}\n")
+    printer._raw(b'\x1d\x21\x11')  # ESC/POS command for change width and height
     printer.set(align='center')
     printer.text(f"{project}\n")
 
@@ -93,6 +98,7 @@ def print_task_receipt(id: str, project: str, priority: str, title: str, planned
     # CUT
     printer.cut()
     printer.close()
+    commit_receipt_number(number)
     print("✅ Task printed successfully!")
     return True
 
@@ -101,4 +107,4 @@ def print_task_receipt(id: str, project: str, priority: str, title: str, planned
     raise
    
 if __name__ == "__main__":
-  print_task_receipt("12345", "Example Project", "High", "Example Task", "2026-01-01", "2026-01-02", "This is an example task description that is a little long and needs to be wrapped properly.")
+  print_task_receipt("Example Project", "High", "Example Task", "2026-01-01", "2026-01-02", "This is an example task description that is a little long and needs to be wrapped properly.")

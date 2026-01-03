@@ -15,6 +15,7 @@ The following environment variables can be set to configure the package:
 | `PRINTER_PORT` | Port of the network printer | `9100` |
 | `PAPER_WIDTH_MM` | Paper width in millimetres for receipts | `80` |
 | `SPECIAL_INDENT` | Optional indentation for printed receipts | `4` |
+| `RECEIPT_NUMBER_RESET_AT` | Number at which the receipt number resets to 1 | `99` |
 
 ## Installation
 To install the package, run:
