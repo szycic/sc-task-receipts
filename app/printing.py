@@ -14,7 +14,7 @@ BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
 SPECIAL_INDENT = int(os.getenv("SPECIAL_INDENT", 4))
   
 PIXELS_MAP = {58: 384, 80: 576}
-MEDIA_WIDTH = PIXELS_MAP.get(PAPER_WIDTH_MM, 576)
+MEDIA_WIDTH_PIXELS = PIXELS_MAP.get(PAPER_WIDTH_MM, 576)
 
 CHARS_PER_LINE_MAP = {58: 32, 80: 48}
 CHARS_PER_LINE = CHARS_PER_LINE_MAP.get(PAPER_WIDTH_MM, 48)
@@ -35,7 +35,9 @@ def print_task_receipt(project: str, priority: str, title: str, planned_start: s
       description (str): The description of the task.
   """
   try:
-    printer = Network(PRINTER_IP, PRINTER_PORT, media_width=MEDIA_WIDTH, timeout=10)
+    printer = Network(PRINTER_IP, PRINTER_PORT, timeout=10)
+    printer.profile.profile_data["media"]["width"]["pixels"] = MEDIA_WIDTH_PIXELS
+    
     number = peek_next_receipt_number()
 
     # MAIN HEADER: Project
