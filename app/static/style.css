@@ -1,0 +1,268 @@
+/* app/static/style.css */
+/* Modern responsive styles for SC Task Receipts */
+/* CSS variables for theme; desktop-first with mobile breakpoints */
+
+/* Theme variables (colors, spacing) */
+:root{
+  --bg: #f6f8fb; /* page background gradient start */
+  --card: #ffffff; /* card background */
+  --muted: #6b7280; /* secondary text */
+  --accent: #0ea5a4; /* primary accent */
+  --accent-600: #059e9d; /* hover accent */
+  --danger: #ef4444; /* destructive */
+  --shadow: 0 6px 18px rgba(13, 23, 32, 0.08);
+  --radius: 10px; /* default border radius */
+  --max-width: 980px; /* centered container width */
+  --gap: 16px; /* grid/gap */
+  --touch: 44px; /* minimum touch target height */
+  --font-base: 15px;
+}
+
+/* Reset and base typography */
+*{box-sizing:border-box}
+html{height:100%}
+body{min-height:100vh}
+body{
+  margin:0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: linear-gradient(180deg, var(--bg), #eef2f6);
+  background-attachment: fixed;
+  color:#0f172a;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  line-height:1.45;
+  font-size:var(--font-base);
+}
+
+/* Container */
+.container{
+  max-width:var(--max-width);
+  margin:32px auto;
+  padding:24px;
+}
+
+/* Header */
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:20px;
+}
+.header h1{font-size:20px;margin:0}
+.header .sub{color:var(--muted);font-size:13px;text-align:right;}
+
+/* Tasks grid / list */
+.tasks-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
+  gap:var(--gap);
+}
+
+/* Task card */
+.task-card{
+  background:var(--card);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.task-card:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(13,23,32,0.12)}
+
+/* Compact rows inside card */
+.task-row{display:flex;align-items:center;gap:12px}
+.task-title{font-weight:600;font-size:15px}
+.task-meta{font-size:12px;color:var(--muted)}
+
+/* Priority badges (semantic classes) */
+.priority{
+  display:inline-block;padding:4px 8px;border-radius:999px;font-weight:600;font-size:12px;color:#fff
+}
+.priority.optional{background:#3b82f6}
+.priority.low{background:#10b981}
+.priority.medium{background:#f59e0b}
+.priority.high{background:#ef4444}
+
+.project-badge{font-size:12px;color:var(--muted)}
+
+/* Actions */
+.task-actions{display:flex;gap:8px;margin-top:auto}
+
+/* Buttons - unified simple style */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:10px 14px;
+  border-radius:10px;
+  border:1px solid transparent;
+  cursor:pointer;
+  font-weight:600;
+  min-height:var(--touch);
+  background:linear-gradient(90deg,var(--accent),var(--accent-600));
+  color:#fff;
+  transition:transform .08s ease, box-shadow .12s ease, background .12s ease, color .12s ease, opacity .12s ease;
+  font-size:15px; /* explicit uniform size */
+  line-height:1.2;
+  text-decoration:none; /* make anchors look like buttons */
+  -webkit-font-smoothing:antialiased;
+}
+/* Ensure anchors with .btn behave the same */
+a.btn{display:inline-flex}
+button.btn{display:inline-flex}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(1px)}
+.btn:focus{outline:none}
+.btn:focus-visible{box-shadow:0 0 0 4px rgba(14,165,164,0.12);border-color:transparent}
+
+/* Disabled state */
+.btn[disabled], .btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* Size / layout helpers */
+.btn-sm{padding:6px 10px;min-height:36px;font-size:14px;border-radius:8px}
+.btn-block{width:100%;display:flex}
+
+/* Specific action IDs: neutral and prominent variants */
+#unprint{
+  background:#fff;
+  color:var(--muted);
+  border:1px solid #e6edf2;
+  box-shadow:none;
+}
+#unprint:hover{background:#fafbfc}
+
+#done{
+  /* use same look as unified .btn */
+  background:linear-gradient(90deg,var(--accent),var(--accent-600));
+  color:#fff;
+  border-color:transparent;
+  box-shadow:0 8px 20px rgba(14,165,164,0.12);
+}
+#done:hover{filter:brightness(.98)}
+
+/* Task details layout */
+.detail-card{
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:20px;
+  box-shadow:var(--shadow);
+}
+.detail-grid{display:grid;grid-template-columns:1fr 280px;gap:20px}
+@media (max-width:820px){.detail-grid{grid-template-columns:1fr}}
+
+.detail-field{margin-bottom:12px}
+.detail-field h3{margin:0 0 6px 0;font-size:13px;color:var(--muted)}
+.detail-field p{margin:0;font-size:15px}
+
+/* Links */
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:none}
+
+/* Table fallback */
+.tasks-table{width:100%;border-collapse:collapse}
+.tasks-table td,.tasks-table th{padding:10px;border-bottom:1px solid #f1f5f9;text-align:left}
+
+/* Utilities */
+.center{display:flex;align-items:center;justify-content:center}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce){
+  *{transition:none!important}
+}
+
+/* Print styles */
+@media print{
+  body{background:#fff}
+  .container{max-width:640px;padding:0}
+  .task-card{box-shadow:none;border-radius:0;padding:8px}
+  .btn{display:none}
+}
+
+/* IDs used by task_details.html */
+#unprint, #done{padding:10px 14px;border-radius:8px;border:0;font-weight:700}
+#unprint{background:#f3f4f6;color:#111}
+#done{background:var(--accent);color:#fff}
+
+/* Toast notifications */
+#toast-container{
+  position:fixed;
+  right:16px;
+  bottom:16px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  z-index:9999;
+  pointer-events:none;
+}
+.toast{
+  pointer-events:auto;
+  min-width:200px;
+  max-width:360px;
+  padding:12px 16px;
+  border-radius:10px;
+  color:#fff;
+  box-shadow:0 8px 24px rgba(2,6,23,0.12);
+  font-weight:600;
+  transform:translateY(10px);
+  opacity:0;
+  transition:transform .18s ease, opacity .18s ease;
+}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.hide{transform:translateY(8px);opacity:0}
+.toast.info{background:linear-gradient(90deg,var(--accent),var(--accent-600))}
+.toast.success{background:linear-gradient(90deg,#34d399,#10b981)}
+.toast.error{background:linear-gradient(90deg,#f97316,#ef4444)}
+
+/* Mobile: medium screens */
+@media (max-width:820px){
+  :root{--font-base:16px}
+  /* force single column on medium/narrow screens to avoid multiple narrow columns */
+  .tasks-grid{grid-template-columns:1fr}
+  .container{padding:20px}
+  .task-title{font-size:17px}
+}
+
+/* Mobile: small screens - bigger fonts, spacing and touch targets */
+@media (max-width:520px){
+  :root{--font-base:17px; --touch:56px; --gap:20px}
+  .container{padding:16px;margin:18px auto}
+  .header h1{font-size:20px}
+
+  /* explicitly single column list for cards */
+  .tasks-grid{grid-template-columns:1fr;gap:var(--gap)}
+
+  /* make cards more spacious for touch */
+  .task-card{padding:18px;gap:14px}
+
+  /* stack title and priority vertically and increase sizes */
+  .task-row{flex-direction:column;align-items:flex-start;gap:8px}
+  .task-title{font-size:18px}
+  .priority{width:100%;text-align:center;padding:10px 0;font-size:15px}
+
+  /* actions column with full-width tappable buttons */
+  .task-actions{flex-direction:column;align-items:stretch}
+  .task-actions .btn{width:100%;justify-content:center;padding:12px 16px;font-size:16px}
+
+  /* metadata more readable */
+  .task-meta{font-size:14px;color:var(--muted)}
+  .project-badge{font-size:14px}
+
+  /* detail view readability */
+  .detail-field p{font-size:17px}
+}
+
+/* Mobile: very small devices */
+@media (max-width:360px){
+  :root{--font-base:16px; --touch:56px}
+  .priority{font-size:14px;padding:8px 0}
+  .btn{padding:12px;border-radius:12px;font-size:15px}
+  .container{padding:12px;margin:12px auto}
+}
+
+/* End of stylesheet */

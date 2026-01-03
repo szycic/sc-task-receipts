@@ -2,25 +2,140 @@
 <html>
 <head>
     <title>Tasks Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/x-icon" href="{{ request.url_for('static', path='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='style.css') }}">
 </head>
 <body>
-    <h1>Tasks to Print</h1>
-    <button id="print-all">PRINT ALL</button>
+<div class="container">
+  <div class="header">
+    <div style="display:flex;align-items:center;gap:12px">
+      <h1 style="margin:0">Tasks to Print</h1>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="sub">Auto-synced from Notion</div>
+      <button id="print-all" class="btn">Print All</button>
+    </div>
+  </div>
 
-    <ul>
-        {% for task in tasks %}
-        <li>
-            <a href="/tasks/{{ task.id }}">{{ task.title }}</a>
-        </li>
-        {% endfor %}
-    </ul>
+  {% if tasks %}
+  <div id="tasks-grid" class="tasks-grid">
+    {% for t in tasks %}
+      <div class="task-card" data-id="{{ t.id }}">
+        <div class="task-row">
+          <div class="task-title">{{ t.title }}</div>
+          {% if t.priority %}
+            <div class="priority {{ t.priority|lower }}">{{ t.priority }}</div>
+          {% endif %}
+        </div>
+        <div class="task-meta small">{{ t.planned_start }} · {{ t.project }}</div>
+        <div class="task-actions">
+          <a class="btn" href="/tasks/{{ t.id }}">Details</a>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% else %}
+    <div id="no-tasks" class="center muted">No tasks to print</div>
+  {% endif %}
+</div>
+
+<!-- Toast container -->
+<div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
 <script>
+function showToast(type, message, duration = 3000){
+  const container = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type} show`;
+  t.textContent = message;
+  container.appendChild(t);
+  setTimeout(()=>{ t.classList.remove('show'); t.classList.add('hide'); }, duration);
+  setTimeout(()=>{ container.removeChild(t); }, duration + 300);
+}
+
+function renderTasks(tasks){
+  const grid = document.getElementById('tasks-grid');
+  if(!grid){
+    // if no grid present, create and insert
+    const container = document.querySelector('.container');
+    const newGrid = document.createElement('div');
+    newGrid.id = 'tasks-grid';
+    newGrid.className = 'tasks-grid';
+    container.appendChild(newGrid);
+  }
+  const g = document.getElementById('tasks-grid');
+  g.innerHTML = '';
+  const noTasksElem = document.getElementById('no-tasks');
+  if(noTasksElem) noTasksElem.remove();
+  if(!tasks || tasks.length === 0){
+    const nt = document.createElement('div');
+    nt.id = 'no-tasks'; nt.className='center muted'; nt.textContent='No tasks to print';
+    g.parentNode.appendChild(nt);
+    return;
+  }
+  tasks.forEach(t=>{
+    const card = document.createElement('div');
+    card.className='task-card';
+    card.setAttribute('data-id', t.id);
+
+    const row = document.createElement('div'); row.className='task-row';
+    const title = document.createElement('div'); title.className='task-title'; title.textContent = t.title;
+    row.appendChild(title);
+    if(t.priority){
+      const pri = document.createElement('div'); pri.className = 'priority ' + (t.priority || '').toLowerCase(); pri.textContent = t.priority;
+      row.appendChild(pri);
+    }
+    card.appendChild(row);
+
+    const meta = document.createElement('div'); meta.className='task-meta small'; meta.textContent = (t.planned_start || '') + ' · ' + (t.project || '');
+    card.appendChild(meta);
+
+    const actions = document.createElement('div'); actions.className='task-actions';
+    const a = document.createElement('a'); a.className='btn'; a.href = '/tasks/' + t.id; a.textContent='Details';
+    actions.appendChild(a);
+    card.appendChild(actions);
+
+    g.appendChild(card);
+  });
+}
+
+async function refreshTasks(){
+  try{
+    const res = await fetch('/api/v1/tasks');
+    const body = await res.json();
+    renderTasks(body.data || []);
+  }catch(e){ console.error(e); }
+}
+
+// Polling auto-refresh (skip when tab is hidden), similar to task_details
+const POLL_INTERVAL = 8000; // ms
+let _pollTimer = null;
+function startPolling(){
+  if(_pollTimer) clearInterval(_pollTimer);
+  _pollTimer = setInterval(()=>{
+    if(!document.hidden){
+      refreshTasks();
+    }
+  }, POLL_INTERVAL);
+}
+
+// refresh immediately when tab becomes visible
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) refreshTasks(); });
+
+// start on load
+document.addEventListener('DOMContentLoaded', ()=>{ refreshTasks(); startPolling(); });
+
 document.getElementById("print-all").addEventListener("click", async () => {
-    const response = await fetch("/api/v1/tasks/print", { method: "POST" });
-    const result = await response.json();
-    alert(result.message);
-    location.reload(); // refresh page to update list
+    try{
+      const response = await fetch("/api/v1/tasks/print", { method: "POST" });
+      const result = await response.json();
+      showToast('success', result.message || 'Printed');
+      // fetch fresh tasks and re-render
+      setTimeout(()=>refreshTasks(), 600);
+    }catch(e){
+      showToast('error', 'Failed to print');
+    }
 });
 </script>
 </body>

@@ -21,7 +21,7 @@ CHARS_PER_LINE = CHARS_PER_LINE_MAP.get(PAPER_WIDTH_MM, 48)
 if not PRINTER_IP:
     raise ValueError("PRINTER_IP is not set in .env!")
 
-def print_task_receipt(id: str, project: str, priority: str, title: str, created_at: str, planned_for: str, due_date: str, description: str):
+def print_task_receipt(id: str, project: str, priority: str, title: str, planned_start: str, due_date: str, description: str):
   """Print a task receipt.
 
   Args:
@@ -29,8 +29,7 @@ def print_task_receipt(id: str, project: str, priority: str, title: str, created
       project (str): The project of the task.
       priority (str): The priority of the task.
       title (str): The title of the task.
-      created_at (str): The creation date of the task.
-      planned_for (str): The planned date for the task.
+      planned_start (str): The planned start date for the task.
       due_date (str): The due date of the task.
       description (str): The description of the task.
   """
@@ -51,7 +50,7 @@ def print_task_receipt(id: str, project: str, priority: str, title: str, created
     printer._raw(b'\x1d\x21\x00') # ESC/POS command for normal size
     printer._raw(b'\x1b\x45\x00')  # ESC/POS command for bold off
     printer._raw(b'\x1b\x4d\x00') # ESC/POS command for emphasized mode off
-    printer.text("-" * (PAPER_WIDTH_MM // 2) + "\n\n")
+    printer.text("-" * CHARS_PER_LINE + "\n\n")
 
     # TASK
     printer.set(align='left')
@@ -63,8 +62,7 @@ def print_task_receipt(id: str, project: str, priority: str, title: str, created
         
     # DATES
     labels_and_dates = [
-        ("Created at", created_at),
-        ("Planned for", planned_for),
+        ("Planned start", planned_start),
         ("Due date", due_date),
     ]
     for label, value in labels_and_dates:
@@ -78,15 +76,15 @@ def print_task_receipt(id: str, project: str, priority: str, title: str, created
       for line in wrapped_description:
         printer.text(f"{' ' * SPECIAL_INDENT}{line}\n")
       printer.text("\n")
-      printer.set(align='center')
-      printer.text("-" * (PAPER_WIDTH_MM // 2) + "\n")
+    printer.set(align='center')
+    printer.text("-" * CHARS_PER_LINE + "\n")
       
     # QR
     qr_data = f"{BASE_URL}/tasks/{id}"
     printer.set(align='center')
     printer.qr(qr_data, size=6)
     printer.text("Scan to mark as DONE\n\n")
-    printer.text("-" * (PAPER_WIDTH_MM // 2) + "\n\n")
+    printer.text("-" * CHARS_PER_LINE + "\n\n")
 
     # FOOTER: print timestamp
     printer.set(align='center')
@@ -102,4 +100,4 @@ def print_task_receipt(id: str, project: str, priority: str, title: str, created
   
     
 if __name__ == "__main__":
-  print_task_receipt("12345", "Example Project", "High", "Example Task", "2026-01-01", "2026-01-02", "2026-01-03", "This is an example task description that is a little long and needs to be wrapped properly.")
+  print_task_receipt("12345", "Example Project", "High", "Example Task", "2026-01-01", "2026-01-02", "This is an example task description that is a little long and needs to be wrapped properly.")

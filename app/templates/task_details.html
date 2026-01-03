@@ -2,35 +2,179 @@
 <html>
 <head>
     <title>Task Details</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/x-icon" href="{{ request.url_for('static', path='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='style.css') }}">
 </head>
 <body>
-    <h1>Task Details</h1>
-    <p>ID: {{ task.id }}</p>
-    <p>Project: {{ task.project }}</p>
-    <p>Priority: {{ task.priority }}</p>
-    <p>Title: {{ task.title }}</p>
-    <p>Created At: {{ task.created_at }}</p>
-    <p>Planned For: {{ task.planned_for }}</p>
-    <p>Due Date: {{ task.due_date }}</p>
-    <p>Description: {{ task.description }}</p>
+<div class="container">
+  <!-- header -->
+  <div class="header">
+    <div style="display:flex;align-items:center;gap:12px">
+      <h1 style="margin:0">Task Details</h1>
+    </div>
+    <div class="sub">ID: {{ task.id }}</div>
+  </div>
 
-    <button id="unprint">UNMARK AS PRINTED</button>
-    <button id="done">MARK AS DONE</button>
+  <!-- main detail card -->
+  <div class="detail-card">
+    <div class="detail-grid">
+      <div>
+        <div class="detail-field">
+          <h3>Title</h3>
+          <p id="td-title">{{ task.title }}</p>
+        </div>
+
+        <div class="detail-field">
+          <h3>Project</h3>
+          <p id="td-project">{{ task.project or "—" }}</p>
+        </div>
+
+        <div class="detail-field">
+          <h3>Priority</h3>
+          <p id="td-priority">{{ task.priority or "—" }}</p>
+        </div>
+
+        <div class="detail-field">
+          <h3>Planned start</h3>
+          <p id="td-planned">{{ task.planned_start or "—" }}</p>
+        </div>
+
+        <div class="detail-field">
+          <h3>Due date</h3>
+          <p id="td-due">{{ task.due_date or "—" }}</p>
+        </div>
+
+        <div class="detail-field">
+          <h3>Description</h3>
+          <p id="td-desc">{{ task.description or "—" }}</p>
+        </div>
+      </div>
+
+      <aside>
+
+        <div class="detail-field">
+          <h3>Printed</h3>        
+          <p id="td-printed" class="small muted">{{ 'Yes' if task.printed else 'No' }}</p>
+        </div>
+
+        <div class="detail-field">
+          <h3>Done</h3>
+          <p id="td-done" class="small muted">{{ 'Yes' if task.done else 'No' }}</p>
+        </div>
+
+        <div class="detail-field">
+          <h3>Actions</h3>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            {% if task.printed %}
+              <button id="unprint" class="btn">Unmark as Printed</button>
+            {% endif %}
+            <button id="print" class="btn">Print Receipt</button>
+            <button id="done" class="btn">Mark as Done</button>
+            <a class="btn" href="/">Go back</a>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
 <script>
-document.getElementById("unprint").addEventListener("click", async () => {
-    const response = await fetch("/api/v1/tasks/{{ task.id }}/unprint", { method: "POST" });
-    const result = await response.json();
-    alert(result.message);
-    location.reload();
+function showToast(type, message, duration = 3000){
+  const container = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type} show`;
+  t.textContent = message;
+  container.appendChild(t);
+  setTimeout(()=>{ t.classList.remove('show'); t.classList.add('hide'); }, duration);
+  setTimeout(()=>{ container.removeChild(t); }, duration + 300);
+}
+
+async function apiPost(path){
+  const res = await fetch(path, { method: 'POST' });
+  if (!res.ok) throw new Error('Request failed');
+  return res.json();
+}
+
+// Polling: fetch updated task data and update DOM
+const TASK_API = '/api/v1' + window.location.pathname; // e.g. /tasks/<id>
+const POLL_INTERVAL = 8000; // ms
+let pollTimer = null;
+
+async function fetchAndUpdate(){
+  if (document.hidden) return; // skip when tab not visible
+  try{
+    const res = await fetch(TASK_API);
+    if (!res.ok) return;
+    const body = await res.json();
+    const t = body.data || body; // support different response shapes
+    // if data wrapped in object, adapt
+    const task = t.data ? t.data : (body.data ? body.data : (body || {}));
+    // support responses where task is directly returned as object
+    const taskObj = body.data || body;
+    // update known fields if present
+    if (taskObj.title !== undefined) document.getElementById('td-title').textContent = taskObj.title || '—';
+    if (taskObj.project !== undefined) document.getElementById('td-project').textContent = taskObj.project || '—';
+    if (taskObj.priority !== undefined) document.getElementById('td-priority').textContent = taskObj.priority || '—';
+    if (taskObj.planned_start !== undefined) document.getElementById('td-planned').textContent = taskObj.planned_start || '—';
+    if (taskObj.due_date !== undefined) document.getElementById('td-due').textContent = taskObj.due_date || '—';
+    if (taskObj.description !== undefined) document.getElementById('td-desc').textContent = taskObj.description || '—';
+    if (taskObj.printed !== undefined) document.getElementById('td-printed').textContent = taskObj.printed ? 'Yes' : 'No';
+    if (taskObj.done !== undefined) document.getElementById('td-done').textContent = taskObj.done ? 'Yes' : 'No';
+
+    // show/hide unprint button depending on printed state
+    const unprintBtn = document.getElementById('unprint');
+    if (taskObj.printed){
+      if (!unprintBtn){
+        const actions = document.querySelector('.detail-field div[style]');
+        const btn = document.createElement('button'); btn.id='unprint'; btn.className='btn'; btn.textContent='Unmark as Printed';
+        actions.insertBefore(btn, actions.firstChild);
+        btn.addEventListener('click', async ()=>{ try{ const r = await apiPost(`/api/v1/tasks/{{ task.id }}/unprint`); showToast('success', r.message); setTimeout(()=>fetchAndUpdate(),600);}catch(e){showToast('error','Failed: '+e.message)} });
+      }
+    } else {
+      if (unprintBtn) unprintBtn.remove();
+    }
+  }catch(e){
+    console.error('poll error', e);
+  }
+}
+
+// start polling
+pollTimer = setInterval(fetchAndUpdate, POLL_INTERVAL);
+// fetch once immediately
+fetchAndUpdate();
+
+{% if task.printed %}
+  document.getElementById('unprint').addEventListener('click', async () => {
+    try {
+      const result = await apiPost(`/api/v1/tasks/{{ task.id }}/unprint`);
+      showToast('success', result.message);
+      setTimeout(()=>fetchAndUpdate(), 600);
+    } catch (e) { showToast('error', 'Failed: '+e.message) }
+  });
+{% endif %}
+
+document.getElementById('print').addEventListener('click', async () => {
+  try {
+    const result = await apiPost(`/api/v1/tasks/{{ task.id }}/print`);
+    showToast('success', result.message);
+    setTimeout(()=>fetchAndUpdate(), 600);
+  } catch (e) { showToast('error', 'Failed: '+e.message) }
 });
 
-document.getElementById("done").addEventListener("click", async () => {
-    const response = await fetch("/api/v1/tasks/{{ task.id }}/done", { method: "POST" });
-    const result = await response.json();
-    alert(result.message);
-    location.reload();
+document.getElementById('done').addEventListener('click', async () => {
+  if (!confirm('Mark this task as Done?')) return;
+  try {
+    const result = await apiPost(`/api/v1/tasks/{{ task.id }}/done`);
+    showToast('success', result.message);
+    setTimeout(()=>fetchAndUpdate(), 600);
+  } catch (e) { showToast('error', 'Failed: '+e.message) }
 });
+
 </script>
 </body>
 </html>
