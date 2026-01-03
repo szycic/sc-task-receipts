@@ -30,6 +30,7 @@
         </div>
         <div class="task-meta small">{{ t.planned_start }} · {{ t.project }}</div>
         <div class="task-actions">
+          <button type="button" class="btn btn-sm" onclick="printTask('{{ t.id }}')">Print</button>
           <a class="btn" href="/tasks/{{ t.id }}">Details</a>
         </div>
       </div>
@@ -52,6 +53,25 @@ function showToast(type, message, duration = 3000){
   container.appendChild(t);
   setTimeout(()=>{ t.classList.remove('show'); t.classList.add('hide'); }, duration);
   setTimeout(()=>{ container.removeChild(t); }, duration + 300);
+}
+
+// helper to print a single task from server-rendered buttons
+function printTask(id){
+  // call the shared client function without a button element
+  printTaskClient(id, null);
+}
+
+// shared client-side print logic used by dynamic buttons
+async function printTaskClient(id, btn){
+  try{
+    const res = await fetch(`/api/v1/tasks/${id}/print`, { method: 'POST' });
+    const body = await res.json();
+    showToast(res.ok ? 'success' : 'error', body.message || (res.ok ? 'Printed' : 'Failed to print'));
+    setTimeout(()=>refreshTasks(), 600);
+  }catch(e){
+    console.error(e);
+    showToast('error', 'Failed to print');
+  }
 }
 
 function renderTasks(tasks){
@@ -92,6 +112,9 @@ function renderTasks(tasks){
     card.appendChild(meta);
 
     const actions = document.createElement('div'); actions.className='task-actions';
+    const printBtn = document.createElement('button'); printBtn.className='btn btn-sm'; printBtn.type='button'; printBtn.textContent = 'Print';
+    printBtn.addEventListener('click', async (e)=>{ e.preventDefault(); printTaskClient(t.id, printBtn); });
+    actions.appendChild(printBtn);
     const a = document.createElement('a'); a.className='btn'; a.href = '/tasks/' + t.id; a.textContent='Details';
     actions.appendChild(a);
     card.appendChild(actions);

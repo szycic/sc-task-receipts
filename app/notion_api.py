@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from notion_client import Client
-from datetime import date
+from datetime import date, datetime
 
 load_dotenv()
 
@@ -72,6 +72,22 @@ def _ensure_projects_for_ids(project_ids):
         projects = get_projects_map()
     return projects
 
+def _parse_date_for_sort(s):
+    """Return a date object for ISO date string s, or None if missing/invalid."""
+    if not s or s == "NONE":
+        return None
+    try:
+        # handle both date-only and datetime ISO strings
+        if 'T' in s:
+            return datetime.fromisoformat(s).date()
+        return date.fromisoformat(s)
+    except Exception:
+        return None
+      
+def _sort_key(t):
+    d = _parse_date_for_sort(t.get("planned_start"))
+    return (d is None, d or date.max, (t.get("title") or "").lower())
+
 def get_tasks_to_print():
   today = date.today().isoformat()
   response = notion.data_sources.query(
@@ -127,6 +143,8 @@ def get_tasks_to_print():
     }
 
     tasks.append(task)
+
+  tasks.sort(key=_sort_key)
 
   return tasks
 
