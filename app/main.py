@@ -9,10 +9,8 @@ from app.printing import print_task_receipt
 
 load_dotenv()
 
-print()
 print("Starting SC Task Receipts application...")
 print("Base URL:", os.getenv("BASE_URL", "http://localhost:8000"))
-print()
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="app/static"), name="static")

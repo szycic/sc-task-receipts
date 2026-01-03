@@ -27,7 +27,6 @@ def _invalidate_projects_cache():
     global _projects_cache
     _projects_cache = None
     # small debug trace when cache is invalidated
-    print("projects: invalidated", flush=True)
 
 def get_projects_map():
     """Return a map of project_id -> project_name. Cached in _projects_cache until invalidated.
@@ -36,7 +35,6 @@ def get_projects_map():
     global _projects_cache
     if _projects_cache is not None:
         # debug: indicate a cache hit
-        print("projects: cached", flush=True)
         return _projects_cache
 
     response = notion.data_sources.query(
@@ -57,7 +55,6 @@ def get_projects_map():
 
     _projects_cache = projects
     # debug: indicate the cache was refreshed from Notion
-    print("projects: refreshed", flush=True)
     return projects
 
 
