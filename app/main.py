@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI, APIRouter, Request
+from fastapi import FastAPI, APIRouter, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -32,10 +32,20 @@ def get_tasks():
 @api_v1_router.post("/tasks/print")
 def print_tasks():
   tasks = get_tasks_to_print()
+  successes = 0
+  failures = []
   for task in tasks:
-    print_task_receipt(task["id"], task["project"], task["priority"], task["title"], task["planned_start"], task["due_date"], task["description"])
-    mark_task_as_printed(task["id"])
-  return {"message": f"{len(tasks)} {'tasks' if len(tasks) != 1 else 'task'} printed"}
+    try:
+      print_task_receipt(task["id"], task["project"], task["priority"], task["title"], task["planned_start"], task["due_date"], task["description"])
+      mark_task_as_printed(task["id"])
+      successes += 1
+    except Exception as e:
+      failures.append({"id": task.get("id"), "error": str(e)})
+
+  msg = f"{successes} {'tasks' if successes != 1 else 'task'} printed"
+  if failures:
+    raise HTTPException(status_code=500, detail={"message": msg + f", {len(failures)} failed", "failures": failures, "successes": successes})
+  return {"message": msg}
 
 @api_v1_router.get("/tasks/{task_id}")
 def get_task(task_id: str):
@@ -45,9 +55,12 @@ def get_task(task_id: str):
 @api_v1_router.post("/tasks/{task_id}/print")
 def print_task(task_id: str):
   task = get_task_details(task_id)
-  print_task_receipt(task["id"], task["project"], task["priority"], task["title"], task["planned_start"], task["due_date"], task["description"])
-  mark_task_as_printed(task["id"])
-  return {"message": f"Task printed"}
+  try:
+    print_task_receipt(task["id"], task["project"], task["priority"], task["title"], task["planned_start"], task["due_date"], task["description"])
+    mark_task_as_printed(task["id"])
+    return {"message": f"Task printed"}
+  except Exception:
+    raise HTTPException(status_code=500, detail="Failed to print")
 
 @api_v1_router.post("/tasks/{task_id}/unprint")
 def unprint_task(task_id: str):

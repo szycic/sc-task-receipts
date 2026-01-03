@@ -94,10 +94,11 @@ def print_task_receipt(id: str, project: str, priority: str, title: str, planned
     printer.cut()
     printer.close()
     print("✅ Task printed successfully!")
+    return True
 
   except Exception as e:
-      print("❌ Failed to print:", e)
-  
-    
+    print("❌ Failed to print:", e)
+    raise
+   
 if __name__ == "__main__":
   print_task_receipt("12345", "Example Project", "High", "Example Task", "2026-01-01", "2026-01-02", "This is an example task description that is a little long and needs to be wrapped properly.")

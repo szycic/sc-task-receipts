@@ -49,10 +49,17 @@ function showToast(type, message, duration = 3000){
   const container = document.getElementById('toast-container');
   const t = document.createElement('div');
   t.className = `toast ${type} show`;
-  t.textContent = message;
+  // ensure message is a string
+  let msg = message;
+  if (typeof msg === 'object'){
+    msg = msg && (msg.detail || msg.message) ? (msg.detail || msg.message) : JSON.stringify(msg);
+  }
+  t.textContent = msg;
   container.appendChild(t);
-  setTimeout(()=>{ t.classList.remove('show'); t.classList.add('hide'); }, duration);
-  setTimeout(()=>{ container.removeChild(t); }, duration + 300);
+  // longer for errors
+  const hideAfter = type === 'error' ? Math.max(duration, 5000) : duration;
+  setTimeout(()=>{ t.classList.remove('show'); t.classList.add('hide'); }, hideAfter);
+  setTimeout(()=>{ container.removeChild(t); }, hideAfter + 300);
 }
 
 // helper to print a single task from server-rendered buttons
@@ -65,12 +72,26 @@ function printTask(id){
 async function printTaskClient(id, btn){
   try{
     const res = await fetch(`/api/v1/tasks/${id}/print`, { method: 'POST' });
-    const body = await res.json();
-    showToast(res.ok ? 'success' : 'error', body.message || (res.ok ? 'Printed' : 'Failed to print'));
+    let body = {};
+    try{ body = await res.json(); }catch(e){ /* not json */ }
+    if(!res.ok){
+      const msg = body.detail || body.message || `Printing failed (status ${res.status})`;
+      showToast('error', msg);
+      console.error('Print failed for', id, body);
+      return;
+    }
+    // success
+    const msg = body.message || 'Printed';
+    showToast('success', msg);
+    // If server reports failures (batch endpoint forwarded here), show details
+    if(body.failures && body.failures.length){
+      showToast('error', `${body.failures.length} failed`);
+      console.error('Print failures', body.failures);
+    }
     setTimeout(()=>refreshTasks(), 600);
   }catch(e){
-    console.error(e);
-    showToast('error', 'Failed to print');
+    console.error('Print request error', e);
+    showToast('error', 'Request failed: ' + (e && e.message ? e.message : String(e)));
   }
 }
 
@@ -152,12 +173,26 @@ document.addEventListener('DOMContentLoaded', ()=>{ refreshTasks(); startPolling
 document.getElementById("print-all").addEventListener("click", async () => {
     try{
       const response = await fetch("/api/v1/tasks/print", { method: "POST" });
-      const result = await response.json();
-      showToast('success', result.message || 'Printed');
+      let result = {};
+      try{ result = await response.json(); }catch(e){ /* not json */ }
+      if(!response.ok){
+        const msg = result.detail || result.message || `Print request failed (status ${response.status})`;
+        showToast('error', msg);
+        console.error('Print-all failed', result);
+        return;
+      }
+
+      if(result.failures && result.failures.length){
+        showToast('error', `${result.successes || 0} printed, ${result.failures.length} failed`);
+        console.error('Print failures', result.failures);
+      }else{
+        showToast('success', result.message || 'Printed');
+      }
       // fetch fresh tasks and re-render
       setTimeout(()=>refreshTasks(), 600);
     }catch(e){
-      showToast('error', 'Failed to print');
+      console.error('Print-all request error', e);
+      showToast('error', 'Request failed: ' + (e && e.message ? e.message : String(e)));
     }
 });
 </script>

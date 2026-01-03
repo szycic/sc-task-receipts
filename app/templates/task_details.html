@@ -96,8 +96,13 @@ function showToast(type, message, duration = 3000){
 
 async function apiPost(path){
   const res = await fetch(path, { method: 'POST' });
-  if (!res.ok) throw new Error('Request failed');
-  return res.json();
+  let body = {};
+  try{ body = await res.json(); }catch(e){ /* no json */ }
+  if(!res.ok){
+    const msg = body.detail || body.message || `Request failed (status ${res.status})`;
+    throw new Error(msg);
+  }
+  return body;
 }
 
 // Polling: fetch updated task data and update DOM
@@ -133,7 +138,7 @@ async function fetchAndUpdate(){
         const actions = document.querySelector('.detail-field div[style]');
         const btn = document.createElement('button'); btn.id='unprint'; btn.className='btn'; btn.textContent='Unmark as Printed';
         actions.insertBefore(btn, actions.firstChild);
-        btn.addEventListener('click', async ()=>{ try{ const r = await apiPost(`/api/v1/tasks/{{ task.id }}/unprint`); showToast('success', r.message); setTimeout(()=>fetchAndUpdate(),600);}catch(e){showToast('error','Failed: '+e.message)} });
+        btn.addEventListener('click', async ()=>{ try{ const r = await apiPost(`/api/v1/tasks/{{ task.id }}/unprint`); showToast('success', r.message); setTimeout(()=>fetchAndUpdate(),600);}catch(e){showToast('error',e.message)} });
       }
     } else {
       if (unprintBtn) unprintBtn.remove();
@@ -154,7 +159,7 @@ fetchAndUpdate();
       const result = await apiPost(`/api/v1/tasks/{{ task.id }}/unprint`);
       showToast('success', result.message);
       setTimeout(()=>fetchAndUpdate(), 600);
-    } catch (e) { showToast('error', 'Failed: '+e.message) }
+    } catch (e) { showToast('error', e.message) }
   });
 {% endif %}
 
@@ -163,7 +168,7 @@ document.getElementById('print').addEventListener('click', async () => {
     const result = await apiPost(`/api/v1/tasks/{{ task.id }}/print`);
     showToast('success', result.message);
     setTimeout(()=>fetchAndUpdate(), 600);
-  } catch (e) { showToast('error', 'Failed: '+e.message) }
+  } catch (e) { showToast('error', e.message) }
 });
 
 document.getElementById('done').addEventListener('click', async () => {
@@ -172,7 +177,7 @@ document.getElementById('done').addEventListener('click', async () => {
     const result = await apiPost(`/api/v1/tasks/{{ task.id }}/done`);
     showToast('success', result.message);
     setTimeout(()=>fetchAndUpdate(), 600);
-  } catch (e) { showToast('error', 'Failed: '+e.message) }
+  } catch (e) { showToast('error', e.message) }
 });
 
 </script>
