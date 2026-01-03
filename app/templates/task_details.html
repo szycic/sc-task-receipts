@@ -88,10 +88,17 @@ function showToast(type, message, duration = 3000){
   const container = document.getElementById('toast-container');
   const t = document.createElement('div');
   t.className = `toast ${type} show`;
-  t.textContent = message;
+  // ensure message is a string
+  let msg = message;
+  if (typeof msg === 'object'){
+    msg = msg && (msg.detail || msg.message) ? (msg.detail || msg.message) : JSON.stringify(msg);
+  }
+  t.textContent = msg;
   container.appendChild(t);
-  setTimeout(()=>{ t.classList.remove('show'); t.classList.add('hide'); }, duration);
-  setTimeout(()=>{ container.removeChild(t); }, duration + 300);
+  // longer for errors to match index behavior
+  const hideAfter = type === 'error' ? Math.max(duration, 5000) : duration;
+  setTimeout(()=>{ t.classList.remove('show'); t.classList.add('hide'); }, hideAfter);
+  setTimeout(()=>{ container.removeChild(t); }, hideAfter + 300);
 }
 
 async function apiPost(path){
