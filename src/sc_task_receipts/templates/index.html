@@ -28,7 +28,7 @@
             <div class="priority {{ t.priority|lower }}">{{ t.priority }}</div>
           {% endif %}
         </div>
-        <div class="task-meta small">{{ t.planned_start }} · {{ t.project }}</div>
+        <div class="task-meta small">{{ t.planned_start or "—" }} · {{ t.project or "—" }}</div>
         <div class="task-actions">
           <button type="button" class="btn btn-sm" onclick="printTask('{{ t.id }}')">Print</button>
           <a class="btn" href="/tasks/{{ t.id }}">Details</a>
@@ -129,7 +129,7 @@ function renderTasks(tasks){
     }
     card.appendChild(row);
 
-    const meta = document.createElement('div'); meta.className='task-meta small'; meta.textContent = (t.planned_start || '') + ' · ' + (t.project || '');
+    const meta = document.createElement('div'); meta.className='task-meta small'; meta.textContent = (t.planned_start || '—') + ' · ' + (t.project || '—');
     card.appendChild(meta);
 
     const actions = document.createElement('div'); actions.className='task-actions';

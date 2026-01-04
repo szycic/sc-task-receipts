@@ -12,6 +12,7 @@ PRINTER_PORT = int(os.getenv("PRINTER_PORT", 9100))
 PAPER_WIDTH_MM = int(os.getenv("PAPER_WIDTH_MM", 80))
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
 SPECIAL_INDENT = int(os.getenv("SPECIAL_INDENT", 4))
+NO_PROJECT_TEXT = os.getenv("NO_PROJECT_TEXT", "No Project")
   
 PIXELS_MAP = {58: 384, 80: 576}
 MEDIA_WIDTH_PIXELS = PIXELS_MAP.get(PAPER_WIDTH_MM, 576)
@@ -50,11 +51,16 @@ def print_task_receipt(id: str, project: str, priority: str, title: str, planned
     printer.text(f"{str(number).zfill(len(str(RECEIPT_NUMBER_RESET_AT)))}\n")
     printer._raw(b'\x1d\x21\x11')  # ESC/POS command for change width and height
     printer.set(align='center')
-    printer.text(f"{project}\n")
+    if project and project.strip():
+      printer.text(f"{project}\n")
+    else:
+      printer.text(f"{NO_PROJECT_TEXT}\n")
 
     # SECONDARY HEADER: Priority
-    printer.set(align='center')
-    printer.text(f"Priority: {priority}\n\n")
+    if priority and priority.strip():
+      printer.text(f"{priority}\n\n")
+    else:
+      printer.text("\n")
     printer._raw(b'\x1d\x21\x00') # ESC/POS command for normal size
     printer._raw(b'\x1b\x45\x00')  # ESC/POS command for bold off
     printer._raw(b'\x1b\x4d\x00') # ESC/POS command for emphasized mode off
@@ -70,8 +76,8 @@ def print_task_receipt(id: str, project: str, priority: str, title: str, planned
         
     # DATES
     labels_and_dates = [
-        ("Planned start", planned_start),
-        ("Due date", due_date),
+        ("Planned start", planned_start if planned_start and planned_start.strip() else "—"),
+        ("Due date", due_date if due_date and due_date.strip() else "—"),
     ]
     for label, value in labels_and_dates:
       printer.text(f"{label}{value.rjust(CHARS_PER_LINE - len(label))}\n")
@@ -110,4 +116,4 @@ def print_task_receipt(id: str, project: str, priority: str, title: str, planned
     raise
    
 if __name__ == "__main__":
-  print_task_receipt("12345", "Example Project", "High", "Example Task", "2026-01-01", "2026-01-02", "This is an example task description that is a little long and needs to be wrapped properly.")
+  print_task_receipt("12345", "", "", "Task Name Here", "", "", "This is an example task description that is a little long and needs to be wrapped properly.")
