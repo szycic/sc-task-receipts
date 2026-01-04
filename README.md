@@ -29,7 +29,7 @@ pip install -r requirements.txt
 ## Running
 To run the application enter `src` and execute:
 ```bash
-uvicorn sc_task_receipts.main:app --reload --host 127.0.0.1 --port 8000
+uvicorn sc_task_receipts.main:app --reload --host 127.0.0.1 --port 8000 --app-dir src
 ```
 
 Also, make sure to set the required environment variables before running the application, especially that `--host` and `--port` match the `BASE_URL` configuration.
