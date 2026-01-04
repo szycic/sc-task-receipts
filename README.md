@@ -16,6 +16,7 @@ The following environment variables can be set to configure the package:
 | `PAPER_WIDTH_MM` | Paper width in millimetres for receipts | `80` |
 | `SPECIAL_INDENT` | Optional indentation for printed receipts | `4` |
 | `RECEIPT_NUMBER_RESET_AT` | Number at which the receipt number resets to 1 | `99` |
+| `DB_PATH` | Path to the SQLite database file for counters (creates its own file if missing) | `~/data/counters.sqlite3` |
 
 ## Installation
 To install the package, run:
@@ -26,9 +27,9 @@ pip install -r requirements.txt
 ```
 
 ## Running
-To run the application, execute:
+To run the application enter `src` and execute:
 ```bash
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+uvicorn sc_task_receipts.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 Also, make sure to set the required environment variables before running the application, especially that `--host` and `--port` match the `BASE_URL` configuration.

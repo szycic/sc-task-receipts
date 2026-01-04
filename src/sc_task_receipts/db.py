@@ -5,7 +5,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DB_PATH = pathlib.Path(__file__).resolve().parent / "data" / "counters.sqlite3"
+PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[2]
+
+_env_db = os.getenv('DB_PATH')
+if _env_db:
+    DB_PATH = pathlib.Path(_env_db).expanduser()
+else:
+    DB_PATH = PROJECT_ROOT / "data" / "counters.sqlite3"
+
 RECEIPT_COUNTER_NAME = "last_receipt_number"
 RECEIPT_NUMBER_RESET_AT = int(os.getenv('RECEIPT_NUMBER_RESET_AT', '99'))
 

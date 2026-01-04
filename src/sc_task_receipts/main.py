@@ -4,17 +4,22 @@ from fastapi import FastAPI, APIRouter, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from app.notion_api import get_tasks_to_print, mark_task_as_printed, unmark_task_as_printed, mark_task_as_done, get_task_details
-from app.printing import print_task_receipt
+from pathlib import Path
+from sc_task_receipts.notion_api import get_tasks_to_print, mark_task_as_printed, unmark_task_as_printed, mark_task_as_done, get_task_details
+from sc_task_receipts.printing import print_task_receipt
 
 load_dotenv()
 
 print("Starting SC Task Receipts application...")
 print("Base URL:", os.getenv("BASE_URL", "http://localhost:8000"))
 
+PACKAGE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = str(PACKAGE_DIR / "static")
+TEMPLATES_DIR = str(PACKAGE_DIR / "templates")
+
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
-templates = Jinja2Templates(directory="app/templates")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 api_v1_router = APIRouter(prefix="/api/v1")
 

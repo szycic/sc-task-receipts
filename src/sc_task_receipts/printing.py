@@ -3,7 +3,7 @@ import textwrap
 from dotenv import load_dotenv
 from escpos.printer import Network
 from datetime import datetime
-from app.db import peek_next_receipt_number, commit_receipt_number, RECEIPT_NUMBER_RESET_AT
+from sc_task_receipts.db import peek_next_receipt_number, commit_receipt_number, RECEIPT_NUMBER_RESET_AT
 
 load_dotenv()
 
