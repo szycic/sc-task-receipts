@@ -23,10 +23,11 @@ if not PRINTER_IP:
     raise ValueError("PRINTER_IP is not set in .env!")
 
 
-def print_task_receipt(project: str, priority: str, title: str, planned_start: str, due_date: str, description: str):
+def print_task_receipt(id: str, project: str, priority: str, title: str, planned_start: str, due_date: str, description: str):
   """Print a task receipt.
 
   Args:
+      id (str): The ID of the task.
       project (str): The project of the task.
       priority (str): The priority of the task.
       title (str): The title of the task.
@@ -109,4 +110,4 @@ def print_task_receipt(project: str, priority: str, title: str, planned_start: s
     raise
    
 if __name__ == "__main__":
-  print_task_receipt("Example Project", "High", "Example Task", "2026-01-01", "2026-01-02", "This is an example task description that is a little long and needs to be wrapped properly.")
+  print_task_receipt("12345", "Example Project", "High", "Example Task", "2026-01-01", "2026-01-02", "This is an example task description that is a little long and needs to be wrapped properly.")

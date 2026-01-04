@@ -41,7 +41,7 @@ def print_tasks():
   failures = []
   for task in tasks:
     try:
-      print_task_receipt(task["project"], task["priority"], task["title"], task["planned_start"], task["due_date"], task["description"])
+      print_task_receipt(task["id"], task["project"], task["priority"], task["title"], task["planned_start"], task["due_date"], task["description"])
       mark_task_as_printed(task["id"])
       successes += 1
     except Exception as e:
@@ -61,7 +61,7 @@ def get_task(task_id: str):
 def print_task(task_id: str):
   task = get_task_details(task_id)
   try:
-    print_task_receipt(task["project"], task["priority"], task["title"], task["planned_start"], task["due_date"], task["description"])
+    print_task_receipt(task["id"], task["project"], task["priority"], task["title"], task["planned_start"], task["due_date"], task["description"])
     mark_task_as_printed(task["id"])
     return {"message": f"Task printed"}
   except Exception:
