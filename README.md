@@ -16,7 +16,8 @@ The following environment variables can be set to configure the package:
 | `PAPER_WIDTH_MM` | Paper width in millimetres for receipts | `80` |
 | `SPECIAL_INDENT` | Optional indentation for printed receipts | `4` |
 | `RECEIPT_NUMBER_RESET_AT` | Number at which the receipt number resets to 1 | `99` |
-| `DB_PATH` | Path to the SQLite database file for counters (creates its own file if missing) | `~/data/counters.sqlite3` |
+| `DB_PATH` | Path to the SQLite database file for counters (creates its own file if missing or empty) | `~/data/counters.sqlite3` |
+| `NO_PROJECT_TEXT` | Text to use when a task has no associated project | `No Project` |
 
 ## Installation
 To install the package, run:
@@ -27,7 +28,7 @@ pip install -r requirements.txt
 ```
 
 ## Running
-To run the application enter `src` and execute:
+To run the application, execute:
 ```bash
 uvicorn sc_task_receipts.main:app --reload --host 127.0.0.1 --port 8000 --app-dir src
 ```
