@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
-from sc_task_receipts.notion_api import get_tasks_to_print, mark_task_as_printed, unmark_task_as_printed, mark_task_as_done, get_task_details
+from sc_task_receipts.notion_api import get_tasks_to_print, mark_task_as_printed, unmark_task_as_printed, mark_task_as_done, get_task_details, refresh_projects
 from sc_task_receipts.printing import print_task_receipt
 
 load_dotenv()
@@ -76,6 +76,11 @@ def unprint_task(task_id: str):
 def task_done(task_id: str):
   mark_task_as_done(task_id)
   return {"message": f"Task marked as done"}
+
+@api_v1_router.post('/projects/refresh')
+def api_refresh_projects():
+    refresh_projects()
+    return {'message': 'Projects refreshed'}
 
 app.include_router(api_v1_router)
 

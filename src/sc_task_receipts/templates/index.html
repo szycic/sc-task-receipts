@@ -14,6 +14,7 @@
     </div>
     <div style="display:flex;align-items:center;gap:12px">
       <div class="sub">Auto-synced from Notion</div>
+      <button id="refresh-projects" class="btn" style="background:linear-gradient(90deg,#64748b,#334155);">Refresh Projects</button>
       <button id="print-all" class="btn">Print All</button>
     </div>
   </div>
@@ -171,7 +172,9 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) refresh
 document.addEventListener('DOMContentLoaded', ()=>{ refreshTasks(); startPolling(); });
 
 document.getElementById("print-all").addEventListener("click", async () => {
+  const btn = document.getElementById('print-all');
     try{
+      btn.disabled = true;
       const response = await fetch("/api/v1/tasks/print", { method: "POST" });
       let result = {};
       try{ result = await response.json(); }catch(e){ /* not json */ }
@@ -194,6 +197,22 @@ document.getElementById("print-all").addEventListener("click", async () => {
       console.error('Print-all request error', e);
       showToast('error', 'Request failed: ' + (e && e.message ? e.message : String(e)));
     }
+    finally{ btn.disabled = false; }
+});
+
+document.getElementById("refresh-projects").addEventListener("click", async () => {
+  const btn = document.getElementById('refresh-projects');
+  try{
+    btn.disabled = true;
+    const res = await fetch('/api/v1/projects/refresh', { method: 'POST' });
+    let body = {};
+    try{ body = await res.json(); }catch(e){}
+    if(!res.ok){ const msg = body.detail || body.message || `Refresh failed (status ${res.status})`; showToast('error', msg); console.error('Refresh failed', body); return; }
+    showToast('success', `Projects refreshed`);
+    // refresh visible tasks so project names update
+    await refreshTasks();
+  }catch(e){ console.error('Refresh request error', e); showToast('error', 'Request failed: ' + (e && e.message ? e.message : String(e))); }
+  finally{ btn.disabled = false; }
 });
 </script>
 </body>

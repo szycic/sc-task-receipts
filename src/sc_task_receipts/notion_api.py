@@ -20,21 +20,29 @@ if not NOTION_PROJECTS_ID:
 
 notion = Client(auth=NOTION_TOKEN)
 
-# Simple projects cache (no TTL): keep projects in memory until we see an unknown project id
 _projects_cache = None
 
 def _invalidate_projects_cache():
+    """Helper to invalidate the in-memory projects cache."""
     global _projects_cache
     _projects_cache = None
-    # small debug trace when cache is invalidated
+    #print("projects: cache invalidated")
+
+
+def refresh_projects():
+    """Force-refresh the projects cache from Notion and return how many projects were loaded.
+    This invalidates the cache and then calls get_projects_map() which will re-populate it.
+    """
+    _invalidate_projects_cache()
+    #print("projects: cache refreshed")
 
 def get_projects_map():
     """Return a map of project_id -> project_name. Cached in _projects_cache until invalidated.
-    The cache is refreshed only when _invalidate_projects_cache() is called (by _ensure_projects_for_ids).
+    The cache is refreshed only when `invalidate_projects_cache()` is called.
     """
     global _projects_cache
     if _projects_cache is not None:
-        # debug: indicate a cache hit
+        #print("projects: cache hit")
         return _projects_cache
 
     response = notion.data_sources.query(
@@ -48,13 +56,12 @@ def get_projects_map():
     )
     projects = {}
     for page in response.get("results", []):
-        # defensive access
         name_prop = page.get("properties", {}).get("Name", {}).get("title")
         name = name_prop[0].get("plain_text") if isinstance(name_prop, list) and len(name_prop) > 0 else ""
         projects[page.get("id")] = name
 
     _projects_cache = projects
-    # debug: indicate the cache was refreshed from Notion
+    #print("projects: cache refreshed")
     return projects
 
 
