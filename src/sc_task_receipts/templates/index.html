@@ -45,6 +45,14 @@
 <!-- Toast container -->
 <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
+<!-- Busy overlay (hidden by default) -->
+<div id="busy-overlay" class="busy-overlay hidden" aria-hidden="true">
+  <div class="busy-box">
+    <div class="spinner" aria-hidden="true"></div>
+    <div class="busy-text">Printing…</div>
+  </div>
+</div>
+
 <script>
 function showToast(type, message, duration = 3000){
   const container = document.getElementById('toast-container');
@@ -171,10 +179,26 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) refresh
 // start on load
 document.addEventListener('DOMContentLoaded', ()=>{ refreshTasks(); startPolling(); });
 
+function showBusy(message = 'Working...'){
+  const overlay = document.getElementById('busy-overlay');
+  if(!overlay) return;
+  overlay.classList.remove('hidden');
+  overlay.setAttribute('aria-hidden', 'false');
+  const txt = overlay.querySelector('.busy-text');
+  if(txt) txt.textContent = message;
+}
+function hideBusy(){
+  const overlay = document.getElementById('busy-overlay');
+  if(!overlay) return;
+  overlay.classList.add('hidden');
+  overlay.setAttribute('aria-hidden', 'true');
+}
+
 document.getElementById("print-all").addEventListener("click", async () => {
   const btn = document.getElementById('print-all');
     try{
       btn.disabled = true;
+      showBusy('Printing all tasks...');
       const response = await fetch("/api/v1/tasks/print", { method: "POST" });
       let result = {};
       try{ result = await response.json(); }catch(e){ /* not json */ }
@@ -197,7 +221,7 @@ document.getElementById("print-all").addEventListener("click", async () => {
       console.error('Print-all request error', e);
       showToast('error', 'Request failed: ' + (e && e.message ? e.message : String(e)));
     }
-    finally{ btn.disabled = false; }
+    finally{ btn.disabled = false; hideBusy(); }
 });
 
 document.getElementById("refresh-projects").addEventListener("click", async () => {
