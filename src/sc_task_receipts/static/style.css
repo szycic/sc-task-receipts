@@ -231,11 +231,21 @@ a:hover{text-decoration:none}
 .hidden { display: none !important; }
 .busy-overlay{position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,0.45);z-index:9998}
 .busy-overlay.hidden{background:transparent;pointer-events:none}
-.busy-box{background:var(--card);padding:18px 22px;border-radius:12px;box-shadow:0 12px 36px rgba(2,6,23,0.28);display:flex;flex-direction:row;align-items:center;gap:14px;min-width:220px}
-.busy-box .spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(15,23,42,0.12);border-top-color:var(--accent);box-sizing:border-box;animation:spin 1s linear infinite}
-.busy-box .busy-text{font-weight:700;color:var(--muted);font-size:15px}
+/* Constrain the busy box so very long titles don't push layout around. Allow it to shrink on very small screens. */
+.busy-box{background:var(--card);padding:14px 16px;border-radius:12px;box-shadow:0 12px 36px rgba(2,6,23,0.28);display:flex;flex-direction:row;align-items:center;gap:12px;min-width:220px;max-width:min(92%,420px)}
+/* Keep spinner fixed size so it never shifts */
+.busy-box .spinner{flex:0 0 36px;width:36px;height:36px;border-radius:50%;border:4px solid rgba(15,23,42,0.12);border-top-color:var(--accent);box-sizing:border-box;animation:spin 1s linear infinite}
+/* Make the text take remaining space; ellipsize on larger screens to avoid pushing; allow wrap on very small screens */
+.busy-box .busy-text{flex:1 1 auto;font-weight:700;color:var(--muted);font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+/* On very small screens allow the busy text to wrap instead of ellipsing so the message remains readable */
+@media (max-width:420px){
+  .busy-box{padding:12px 12px;gap:10px}
+  .busy-box .spinner{flex:0 0 28px;width:28px;height:28px;border-width:3px}
+  .busy-box .busy-text{white-space:normal;word-break:break-word;}
+}
 
 /* ensure overlay hides on print */
 @media print{ .busy-overlay{display:none !important} }

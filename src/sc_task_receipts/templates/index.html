@@ -73,34 +73,48 @@ function showToast(type, message, duration = 3000){
 
 // helper to print a single task from server-rendered buttons
 function printTask(id){
+  // read title from the DOM and forward to shared client function
+  const card = document.querySelector(`.task-card[data-id="${id}"]`);
+  const titleElem = card ? card.querySelector('.task-title') : null;
+  const title = titleElem ? titleElem.textContent.trim() : undefined;
   // call the shared client function without a button element
-  printTaskClient(id, null);
+  printTaskClient(id, null, title);
 }
 
 // shared client-side print logic used by dynamic buttons
-async function printTaskClient(id, btn){
+async function printTaskClient(id, btn, title){
+  let printed = false;
   try{
+    if (btn) btn.disabled = true;
+    const busyMsg = title ? `Printing task "${title}"...` : 'Printing task...';
+    showBusy(busyMsg);
+
     const res = await fetch(`/api/v1/tasks/${id}/print`, { method: 'POST' });
     let body = {};
     try{ body = await res.json(); }catch(e){ /* not json */ }
+
     if(!res.ok){
       const msg = body.detail || body.message || `Printing failed (status ${res.status})`;
       showToast('error', msg);
       console.error('Print failed for', id, body);
-      return;
+    } else {
+      // success
+      const msg = body.message || 'Printed';
+      showToast('success', msg);
+      if(body.failures && body.failures.length){
+        showToast('error', `${body.failures.length} failed`);
+        console.error('Print failures', body.failures);
+      }
+      printed = true;
+      // refresh tasks so printed state updates
+      await refreshTasks();
     }
-    // success
-    const msg = body.message || 'Printed';
-    showToast('success', msg);
-    // If server reports failures (batch endpoint forwarded here), show details
-    if(body.failures && body.failures.length){
-      showToast('error', `${body.failures.length} failed`);
-      console.error('Print failures', body.failures);
-    }
-    setTimeout(()=>refreshTasks(), 600);
   }catch(e){
     console.error('Print request error', e);
     showToast('error', 'Request failed: ' + (e && e.message ? e.message : String(e)));
+  }finally{
+    if (btn) btn.disabled = false;
+    hideBusy();
   }
 }
 
@@ -143,7 +157,7 @@ function renderTasks(tasks){
 
     const actions = document.createElement('div'); actions.className='task-actions';
     const printBtn = document.createElement('button'); printBtn.className='btn btn-sm'; printBtn.type='button'; printBtn.textContent = 'Print';
-    printBtn.addEventListener('click', async (e)=>{ e.preventDefault(); printTaskClient(t.id, printBtn); });
+    printBtn.addEventListener('click', async (e)=>{ e.preventDefault(); printTaskClient(t.id, printBtn, t.title); });
     actions.appendChild(printBtn);
     const a = document.createElement('a'); a.className='btn'; a.href = '/tasks/' + t.id; a.textContent='Details';
     actions.appendChild(a);
@@ -216,7 +230,7 @@ document.getElementById("print-all").addEventListener("click", async () => {
         showToast('success', result.message || 'Printed');
       }
       // fetch fresh tasks and re-render
-      setTimeout(()=>refreshTasks(), 600);
+      await refreshTasks();
     }catch(e){
       console.error('Print-all request error', e);
       showToast('error', 'Request failed: ' + (e && e.message ? e.message : String(e)));
