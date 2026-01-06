@@ -114,6 +114,73 @@ def print_task_receipt(id: str, project: str, priority: str, title: str, planned
   except Exception as e:
     print("❌ Failed to print:", e)
     raise
-   
+
+def print_todo_summary_receipt(list_of_tasks):
+  """Print a todo summary receipt."""
+  try:
+    printer = Network(PRINTER_IP, PRINTER_PORT, timeout=10)
+    printer.profile.profile_data["media"]["width"]["pixels"] = MEDIA_WIDTH_PIXELS
+
+    # MAIN HEADER
+    printer._raw(b'\x1b\x40')  # ESC/POS command to initialize printer
+    printer.set(align='center')
+    printer.text("ToDo Summary\n")
+    printer.text(f"{len(list_of_tasks)} tasks\n")
+    printer.text("-" * CHARS_PER_LINE + "\n")
+
+    for task in list_of_tasks:
+      printer.set(align='left')
+      wrapped_title = textwrap.wrap(task['title'], width=CHARS_PER_LINE - 2)
+      for line in wrapped_title:
+        if line == wrapped_title[0]:
+          printer.text(f"• {line}\n")
+        else:
+          printer.text(f"{line}\n")
+      if task['due_date'] and task['due_date'].strip():
+        printer.text(f"  Due: {task['due_date']}\n")
+      if task['priority'] and task['priority'].strip():
+        printer.text(f"  Prio: {task['priority']}\n")
+      if task['planned_start'] and task['planned_start'].strip():
+        printer.text(f"  Start: {task['planned_start']}\n")
+      if task['project'] and task['project'].strip():
+        printer.text(f"  Project: {task['project']}\n")
+      if task != list_of_tasks[-1]:
+        printer.text("\n")
+
+    # FOOTER: print timestamp
+    printer.set(align='center')
+    printer.text("-" * CHARS_PER_LINE + "\n")
+    printer.text(f"Printed at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+    # CUT
+    printer.cut()
+    printer.close()
+    print("✅ ToDo summary printed successfully!")
+    return True
+
+  except Exception as e:
+    print("❌ Failed to print:", e)
+    raise
+
 if __name__ == "__main__":
-  print_task_receipt("12345", "", "", "Task Name Here", "", "", "This is an example task description that is a little long and needs to be wrapped properly.")
+  #print_task_receipt("12345", "", "", "Task Name Here", "", "", "This is an example task description that is a little long and needs to be wrapped properly.")
+  print_todo_summary_receipt([
+    {
+      "id": "task1",
+      "project": "Project Alpha",
+      "priority": "High",
+      "title": "[AP] Special financial knowleedge workshop so fun to attend",
+      "planned_start": "2024-07-01",
+      "due_date": "2024-07-05",
+      "description": "Finish the quarterly financial report and send it to the management team."
+    },
+    {
+      "id": "task2",
+      "project": "",
+      "priority": "Low",
+      "title": "Organize workspace",
+      "planned_start": "",
+      "due_date": "",
+      "description": "Clean and organize the physical and digital workspace for better productivity."
+    }
+  ])

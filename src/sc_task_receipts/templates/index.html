@@ -9,12 +9,13 @@
 <body>
 <div class="container">
   <div class="header">
-    <div style="display:flex;align-items:center;gap:12px">
+    <div class="header-top">
       <h1 style="margin:0">Tasks to Print</h1>
-    </div>
-    <div style="display:flex;align-items:center;gap:12px">
       <div class="sub">Auto-synced from Notion</div>
-      <button id="refresh-projects" class="btn" style="background:linear-gradient(90deg,#64748b,#334155);">Refresh Projects</button>
+    </div>
+    <div class="header-actions">
+      <button id="refresh-projects" class="btn btn-neutral">Refresh Projects</button>
+      <button id="print-summary" class="btn">Print Summary</button>
       <button id="print-all" class="btn">Print All</button>
     </div>
   </div>
@@ -236,6 +237,30 @@ document.getElementById("print-all").addEventListener("click", async () => {
       showToast('error', 'Request failed: ' + (e && e.message ? e.message : String(e)));
     }
     finally{ btn.disabled = false; hideBusy(); }
+});
+
+document.getElementById("print-summary").addEventListener("click", async () => {
+  const btn = document.getElementById('print-summary');
+  try{
+    btn.disabled = true;
+    showBusy('Printing ToDo summary...');
+    const res = await fetch('/api/v1/tasks/summary/print', { method: 'POST' });
+    let body = {};
+    try{ body = await res.json(); }catch(e){ /* not json */ }
+    if(!res.ok){
+      const msg = body.detail || body.message || `Summary print failed (status ${res.status})`;
+      showToast('error', msg);
+      console.error('Summary print failed', body);
+      return;
+    }
+    showToast('success', body.message || 'ToDo summary printed');
+  }catch(e){
+    console.error('Summary print request error', e);
+    showToast('error', 'Request failed: ' + (e && e.message ? e.message : String(e)));
+  }finally{
+    btn.disabled = false;
+    hideBusy();
+  }
 });
 
 document.getElementById("refresh-projects").addEventListener("click", async () => {

@@ -51,6 +51,7 @@ body{
 }
 .header h1{font-size:20px;margin:0}
 .header .sub{color:var(--muted);font-size:13px;text-align:right;}
+.header > div:last-child{display:flex;align-items:center;gap:10px}
 
 /* Tasks grid / list */
 .tasks-grid{
@@ -134,6 +135,23 @@ button.btn{display:inline-flex}
 .btn-sm{padding:6px 10px;min-height:36px;font-size:14px;border-radius:8px}
 .btn-block{width:100%;display:flex}
 
+/* Neutral button variant */
+.btn-neutral{
+  background: linear-gradient(90deg,#64748b,#334155);
+  color:#fff;
+  border:1px solid transparent;
+  box-shadow:none;
+  padding:10px 12px;
+  font-size:14px;
+  border-radius:10px;
+  min-height:var(--touch);
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+.btn-neutral:hover{ filter:brightness(0.98); }
+.btn-neutral:active{ filter:brightness(0.94); }
+
 /* Specific action IDs: neutral and prominent variants */
 #unprint{
   background:#fff;
@@ -151,6 +169,58 @@ button.btn{display:inline-flex}
   box-shadow:0 8px 20px rgba(14,165,164,0.12);
 }
 #done:hover{filter:brightness(.98)}
+
+/* Print Summary button — match primary .btn styling so it appears like Print All */
+#print-summary{background:linear-gradient(90deg,var(--accent),var(--accent-600));color:#fff;padding:10px 12px;border-color:transparent}
+
+/* Ensure small screens can wrap header controls without overflow */
+@media (max-width:520px){
+  .header{flex-direction:column;align-items:stretch;gap:12px}
+  /* title + sub stay on one line, spaced apart */
+  .header-top{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px}
+
+  /* ACTIONS ROW: keep buttons on a single line and make them share available space evenly */
+  .header > .header-actions{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:nowrap}
+  .header-actions .btn{flex:1 1 0;min-width:0;margin:0;padding:12px 10px}
+
+  /* keep other mobile rules intact */
+  :root{--font-base:17px; --touch:56px; --gap:20px}
+  .container{padding:16px;margin:18px auto}
+  .header h1{font-size:20px}
+
+  /* explicitly single column list for cards */
+  .tasks-grid{grid-template-columns:1fr;gap:var(--gap)}
+
+  /* make cards more spacious for touch */
+  .task-card{padding:18px;gap:14px}
+
+  /* stack title and priority vertically and increase sizes */
+  .task-row{flex-direction:column;align-items:flex-start;gap:8px}
+  .task-title{font-size:18px}
+  .priority{width:100%;text-align:center;padding:10px 0;font-size:15px}
+
+  /* actions: keep buttons side-by-side on mobile and make them share space */
+  .task-actions{flex-direction:row;align-items:center;gap:8px}
+  /* ensure all action buttons share the same size and appearance */
+  .task-actions .btn,
+  .task-actions .btn.btn-sm{
+    flex:1;
+    min-width:0;
+    justify-content:center;
+    padding:12px 16px;
+    font-size:16px;
+    line-height:1.2;
+    min-height:var(--touch);
+    border-radius:12px;
+  }
+
+  /* metadata more readable */
+  .task-meta{font-size:14px;color:var(--muted)}
+  .project-badge{font-size:14px}
+
+  /* detail view readability */
+  .detail-field p{font-size:17px}
+}
 
 /* Task details layout */
 .detail-card{
@@ -298,13 +368,3 @@ a:hover{text-decoration:none}
   /* detail view readability */
   .detail-field p{font-size:17px}
 }
-
-/* Mobile: very small devices */
-@media (max-width:360px){
-  :root{--font-base:16px; --touch:56px}
-  .priority{font-size:14px;padding:8px 0}
-  .btn{padding:12px;border-radius:12px;font-size:15px}
-  .container{padding:12px;margin:12px auto}
-}
-
-/* End of stylesheet */

@@ -5,8 +5,8 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
-from sc_task_receipts.notion_api import get_tasks_to_print, mark_task_as_printed, unmark_task_as_printed, mark_task_as_done, get_task_details, refresh_projects
-from sc_task_receipts.printing import print_task_receipt
+from sc_task_receipts.notion_api import get_tasks_to_print, get_todo_summary_to_print, mark_task_as_printed, unmark_task_as_printed, mark_task_as_done, get_task_details, refresh_projects
+from sc_task_receipts.printing import print_task_receipt, print_todo_summary_receipt
 
 load_dotenv()
 
@@ -52,10 +52,19 @@ def print_tasks():
     raise HTTPException(status_code=500, detail={"message": msg + f", {len(failures)} failed", "failures": failures, "successes": successes})
   return {"message": msg}
 
+@api_v1_router.post("/tasks/summary/print")
+def print_todo_summary():
+  tasks = get_todo_summary_to_print()
+  try:
+    print_todo_summary_receipt(tasks)
+    return {"message": "ToDo summary printed"}
+  except Exception as e:
+    raise HTTPException(status_code=500, detail={"message": "ToDo summary failed to print", "error": str(e)})
+
 @api_v1_router.get("/tasks/{task_id}")
 def get_task(task_id: str):
   task_details = get_task_details(task_id)
-  return {"message": f"Task data has been retrieved", "data": task_details}
+  return {"message": "Task data has been retrieved", "data": task_details}
 
 @api_v1_router.post("/tasks/{task_id}/print")
 def print_task(task_id: str):
@@ -63,24 +72,24 @@ def print_task(task_id: str):
   try:
     print_task_receipt(task["id"], task["project"], task["priority"], task["title"], task["planned_start"], task["due_date"], task["description"])
     mark_task_as_printed(task["id"])
-    return {"message": f"Task printed"}
+    return {"message": "Task printed"}
   except Exception:
     raise HTTPException(status_code=500, detail="Failed to print")
 
 @api_v1_router.post("/tasks/{task_id}/unprint")
 def unprint_task(task_id: str):
   unmark_task_as_printed(task_id)
-  return {"message": f"Task unmarked as printed"}
+  return {"message": "Task unmarked as printed"}
 
 @api_v1_router.post("/tasks/{task_id}/done")
 def task_done(task_id: str):
   mark_task_as_done(task_id)
-  return {"message": f"Task marked as done"}
+  return {"message": "Task marked as done"}
 
 @api_v1_router.post('/projects/refresh')
 def api_refresh_projects():
     refresh_projects()
-    return {'message': 'Projects refreshed'}
+    return {"message": "Projects refreshed"}
 
 app.include_router(api_v1_router)
 

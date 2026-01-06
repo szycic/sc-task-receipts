@@ -92,64 +92,38 @@ def _parse_date_for_sort(s):
         return None
       
 def _sort_key(t):
-    d = _parse_date_for_sort(t.get("planned_start"))
-    return (d is None, d or date.max, (t.get("title") or "").lower())
+    """Sort by: 1) due_date (earliest first, missing last), 2) priority (High->Medium->Low->Optional), 3) planned_start (earliest first, missing last), 4) title."""
+    due = _parse_date_for_sort(t.get("due_date"))
+    planned = _parse_date_for_sort(t.get("planned_start"))
 
-def get_tasks_to_print():
-  today = date.today().isoformat()
+    # Priority ordering: lower number sorts first (higher priority)
+    priority_str = (t.get("priority") or "").strip().lower()
+    priority_order = {
+        "high": 0,
+        "medium": 1,
+        "low": 2,
+        "optional": 3,
+    }
+    pr_rank = priority_order.get(priority_str, 4)
+
+    # (due_missing, due_value, priority_rank, planned_missing, planned_value, title)
+    return (
+        due is None,
+        due or date.max,
+        pr_rank,
+        planned is None,
+        planned or date.max,
+        (t.get("title") or "").lower(),
+    )
+  
+def _fetch_tasks_with_filter(filter_dict):
+  """Fetch tasks from Notion with the given filter."""
   response = notion.data_sources.query(
     data_source_id=NOTION_TASKS_ID,
-    filter={
-        "or": [
-          {
-            "and": [
-              {
-                "property": "Done",
-                "status": {
-                  "does_not_equal": "Done"
-                }
-              },
-              {
-                "property": "Planned start",
-                "date": {
-                  "on_or_before": today
-                }
-              },
-              {
-                "property": "Printed",
-                "checkbox": {
-                  "equals": False
-                }
-              }
-            ]
-          },
-          {
-            "and": [
-              {
-                "property": "Done",
-                "status": {
-                  "does_not_equal": "Done"
-                }
-              },
-              {
-                "property": "Planned start",
-                "date": {
-                  "is_empty": True
-                }
-              },
-              {
-                "property": "Printed",
-                "checkbox": {
-                  "equals": False
-                }
-              }
-            ]
-          }
-        ]
-      }
+    filter=filter_dict
   )
   
-  # collect referenced project ids from the result set so we can refresh cache only when needed
+    # collect referenced project ids from the result set so we can refresh cache only when needed
   referenced_ids = set()
   for page in response.get("results", []):
     props = page.get("properties", {})
@@ -178,9 +152,103 @@ def get_tasks_to_print():
     tasks.append(task)
 
   tasks.sort(key=_sort_key)
-
   return tasks
 
+def get_tasks_to_print():
+  """Return list of tasks to print (not done, planned start <= today or no planned start, not printed)."""
+  today = date.today().isoformat()
+  filter_dict={
+      "or": [
+        {
+          "and": [
+            {
+              "property": "Done",
+              "status": {
+                "does_not_equal": "Done"
+              }
+            },
+            {
+              "property": "Planned start",
+              "date": {
+                "on_or_before": today
+              }
+            },
+            {
+              "property": "Printed",
+              "checkbox": {
+                "equals": False
+              }
+            }
+          ]
+        },
+        {
+          "and": [
+            {
+              "property": "Done",
+              "status": {
+                "does_not_equal": "Done"
+              }
+            },
+            {
+              "property": "Planned start",
+              "date": {
+                "is_empty": True
+              }
+            },
+            {
+              "property": "Printed",
+              "checkbox": {
+                "equals": False
+              }
+            }
+          ]
+        }
+      ]
+    }
+  
+  return _fetch_tasks_with_filter(filter_dict)
+
+def get_todo_summary_to_print():
+  """Return list of tasks for daily summary (not done, planned start <= today or no planned start)."""
+  today = date.today().isoformat()
+  filter_dict={
+      "or": [
+        {
+          "and": [
+            {
+              "property": "Done",
+              "status": {
+                "does_not_equal": "Done"
+              }
+            },
+            {
+              "property": "Planned start",
+              "date": {
+                "on_or_before": today
+              }
+            }
+          ]
+        },
+        {
+          "and": [
+            {
+              "property": "Done",
+              "status": {
+                "does_not_equal": "Done"
+              }
+            },
+            {
+              "property": "Planned start",
+              "date": {
+                "is_empty": True
+              }
+            }
+          ]
+        }
+      ]
+    }
+  
+  return _fetch_tasks_with_filter(filter_dict)
 
 def mark_task_as_printed(id: str):
   notion.pages.update(
