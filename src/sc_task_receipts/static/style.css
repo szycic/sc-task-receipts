@@ -171,7 +171,12 @@ button.btn{display:inline-flex}
 #done:hover{filter:brightness(.98)}
 
 /* Print Summary button — match primary .btn styling so it appears like Print All */
-#print-summary{background:linear-gradient(90deg,var(--accent),var(--accent-600));color:#fff;padding:10px 12px;border-color:transparent}
+#print-summary{background:linear-gradient(90deg,#f59e0b,#f97316);color:#fff;padding:10px 12px;border-color:transparent;box-shadow:none}
+#print-summary:hover{filter:brightness(0.96)}
+
+/* Make Print All visually distinct (teal -> blue gradient) */
+#print-all{background:linear-gradient(90deg,#06b6d4,#0ea5a4);color:#fff;padding:10px 12px;border-color:transparent;box-shadow:0 6px 18px rgba(6,182,212,0.08)}
+#print-all:hover{filter:brightness(0.98)}
 
 /* Ensure small screens can wrap header controls without overflow */
 @media (max-width:520px){
