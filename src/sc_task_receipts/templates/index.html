@@ -17,6 +17,7 @@
       <button id="refresh-projects" class="btn btn-neutral">Refresh Projects</button>
       <button id="print-summary" class="btn">Print Summary</button>
       <button id="print-all" class="btn">Print All</button>
+      <button id="print-logbook" class="btn btn-neutral">Print Logbook</button>
     </div>
   </div>
 
@@ -51,6 +52,21 @@
   <div class="busy-box">
     <div class="spinner" aria-hidden="true"></div>
     <div class="busy-text">Printing…</div>
+  </div>
+</div>
+
+<!-- Logbook date picker modal -->
+<div id="logbook-modal" class="busy-overlay hidden" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="logbook-title">
+    <div class="modal-title" id="logbook-title">Choose logbook date</div>
+    <div class="modal-subtitle">Yesterday is selected by default.</div>
+
+    <input type="date" id="logbook-date" class="modal-field">
+
+    <div class="modal-actions">
+      <button type="button" id="logbook-cancel" class="btn btn-secondary">Cancel</button>
+      <button type="button" id="logbook-confirm" class="btn">Print</button>
+    </div>
   </div>
 </div>
 
@@ -276,6 +292,66 @@ document.getElementById("refresh-projects").addEventListener("click", async () =
     await refreshTasks();
   }catch(e){ console.error('Refresh request error', e); showToast('error', 'Request failed: ' + (e && e.message ? e.message : String(e))); }
   finally{ btn.disabled = false; }
+});
+
+function yesterdayIso(){
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+function openLogbookPopup(){
+  const modal = document.getElementById('logbook-modal');
+  const input = document.getElementById('logbook-date');
+  input.value = yesterdayIso();
+  modal.classList.remove('hidden');
+  modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeLogbookPopup(){
+  const modal = document.getElementById('logbook-modal');
+  modal.classList.add('hidden');
+  modal.setAttribute('aria-hidden', 'true');
+}
+
+document.getElementById("print-logbook").addEventListener("click", openLogbookPopup);
+document.getElementById("logbook-cancel").addEventListener("click", closeLogbookPopup);
+
+document.getElementById("logbook-confirm").addEventListener("click", async () => {
+  const btn = document.getElementById('logbook-confirm');
+  const targetDate = document.getElementById('logbook-date').value;
+
+  if (!targetDate) {
+    showToast('error', 'Please choose a date.');
+    return;
+  }
+
+  try {
+    btn.disabled = true;
+    showBusy('Printing logbook...');
+    const res = await fetch('/api/v1/tasks/logbook/print', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target_date: targetDate })
+    });
+
+    let body = {};
+    try { body = await res.json(); } catch(e) { /* not json */ }
+
+    if (!res.ok) {
+      const msg = body.detail || body.message || `Logbook print failed (status ${res.status})`;
+      showToast('error', msg);
+      return;
+    }
+
+    showToast('success', body.message || 'Logbook printed');
+    closeLogbookPopup();
+  } catch (e) {
+    showToast('error', 'Request failed: ' + (e && e.message ? e.message : String(e)));
+  } finally {
+    btn.disabled = false;
+    hideBusy();
+  }
 });
 </script>
 </body>

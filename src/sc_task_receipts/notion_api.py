@@ -8,6 +8,7 @@ load_dotenv()
 NOTION_TOKEN = os.getenv("NOTION_TOKEN")
 NOTION_TASKS_ID = os.getenv("NOTION_TASKS_ID")
 NOTION_PROJECTS_ID = os.getenv("NOTION_PROJECTS_ID")
+NOTION_LOGBOOK_ID = os.getenv("NOTION_LOGBOOK_ID")
 
 if not NOTION_TOKEN:
     raise RuntimeError("NOTION_TOKEN is not set in .env!")
@@ -17,6 +18,9 @@ if not NOTION_TASKS_ID:
 
 if not NOTION_PROJECTS_ID:
     raise RuntimeError("NOTION_PROJECTS_ID is not set in .env!")
+  
+if not NOTION_LOGBOOK_ID:
+    raise RuntimeError("NOTION_LOGBOOK_ID is not set in .env!")
 
 notion = Client(auth=NOTION_TOKEN)
 
@@ -154,6 +158,44 @@ def _fetch_tasks_with_filter(filter_dict):
   tasks.sort(key=_sort_key)
   return tasks
 
+def _fetch_logs_with_filter_sort(filter_dict, sorts):
+  """Fetch logs from Notion with the given filter and sort options."""
+  response = notion.data_sources.query(
+    data_source_id=NOTION_LOGBOOK_ID,
+    filter=filter_dict,
+    sorts=sorts
+  )
+  
+      # collect referenced project ids from the result set so we can refresh cache only when needed
+  referenced_ids = set()
+  for page in response.get("results", []):
+    props = page.get("properties", {})
+    rel = props.get("Project") and props.get("Project").get("relation")
+    if rel:
+      for r in rel:
+        if isinstance(r, dict) and r.get("id"):
+          referenced_ids.add(r.get("id"))
+          
+  projects = _ensure_projects_for_ids(referenced_ids)
+  logs = []
+  
+  for page in response.get("results", []):
+    props = page.get("properties", {})
+
+    log = {
+      "id": page.get("id"),
+      "title": props.get("Name")["title"][0]["plain_text"] if props.get("Name") and props.get("Name").get("title") else "",
+      "logged_on": props.get("Logged on")["date"]["start"] if props.get("Logged on") and props.get("Logged on").get("date") else "",
+      "project": projects.get(props.get("Project")["relation"][0]["id"], "") if props.get("Project") and props.get("Project").get("relation") else "",
+      "status": props.get("Status")["select"]["name"] if props.get("Status") and props.get("Status").get("select") else "",
+      "log": props.get("Log")["rich_text"][0]["plain_text"] if props.get("Log") and props.get("Log").get("rich_text") else "",
+    }
+
+    logs.append(log)
+
+  logs.sort(key=_sort_key)
+  return logs
+
 def get_tasks_to_print():
   """Return list of tasks to print (not done, planned start <= today or no planned start, not printed)."""
   today = date.today().isoformat()
@@ -249,6 +291,37 @@ def get_todo_summary_to_print():
     }
   
   return _fetch_tasks_with_filter(filter_dict)
+
+def get_logs_to_print(target_date: str):
+  """Return list of logs to print for the given date."""
+  day_date = date.fromisoformat(target_date)
+  next_day_date = day_date.replace(day=day_date.day + 1)
+  
+  filter_dict={
+    "and": [
+      {
+        "property": "Logged on",
+        "date": {
+          "on_or_after": day_date.isoformat()
+        }
+      },
+      {
+        "property": "Logged on",
+        "date": {
+          "before": next_day_date.isoformat()
+        }
+      }
+    ]
+    }
+  
+  sorts = [
+    {
+      "property": "Logged on",
+      "direction": "ascending"
+    }
+  ]
+  
+  return _fetch_logs_with_filter_sort(filter_dict, sorts)
 
 def mark_task_as_printed(id: str):
   notion.pages.update(

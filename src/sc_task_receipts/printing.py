@@ -115,7 +115,7 @@ def print_task_receipt(id: str, project: str, priority: str, title: str, planned
     print("❌ Failed to print:", e)
     raise
 
-def print_todo_summary_receipt(list_of_tasks):
+def print_todo_summary_receipt(list_of_tasks: list):
   """Print a todo summary receipt."""
   try:
     printer = Network(PRINTER_IP, PRINTER_PORT, timeout=10)
@@ -123,9 +123,16 @@ def print_todo_summary_receipt(list_of_tasks):
 
     # MAIN HEADER
     printer._raw(b'\x1b\x40')  # ESC/POS command to initialize printer
+    printer._raw(b'\x1b\x45\x01')  # ESC/POS command for bold on
+    printer._raw(b'\x1b\x4d\x01') # ESC/POS command for emphasized mode on
+    printer._raw(b'\x1d\x21\x11')  # ESC/POS command for change width and height
     printer.set(align='center')
     printer.text("ToDo Summary\n")
-    printer.text(f"{len(list_of_tasks)} tasks\n")
+    printer._raw(b'\x1d\x21\x10')  # ESC/POS command for change width and height
+    printer.text(f"{len(list_of_tasks)} {('tasks' if len(list_of_tasks) != 1 else 'task')}\n")
+    printer._raw(b'\x1d\x21\x00') # ESC/POS command for normal size
+    printer._raw(b'\x1b\x45\x00')  # ESC/POS command for bold off
+    printer._raw(b'\x1b\x4d\x00') # ESC/POS command for emphasized mode off
     printer.text("-" * CHARS_PER_LINE + "\n")
 
     for task in list_of_tasks:
@@ -136,26 +143,87 @@ def print_todo_summary_receipt(list_of_tasks):
           printer.text(f"• {line}\n")
         else:
           printer.text(f"{line}\n")
+      if task['project'] and task['project'].strip():
+        printer.text(f"  {task['project']}\n")
       if task['due_date'] and task['due_date'].strip():
         printer.text(f"  Due: {task['due_date']}\n")
       if task['priority'] and task['priority'].strip():
         printer.text(f"  Prio: {task['priority']}\n")
       if task['planned_start'] and task['planned_start'].strip():
         printer.text(f"  Start: {task['planned_start']}\n")
-      if task['project'] and task['project'].strip():
-        printer.text(f"  Project: {task['project']}\n")
       if task != list_of_tasks[-1]:
         printer.text("\n")
 
     # FOOTER: print timestamp
     printer.set(align='center')
     printer.text("-" * CHARS_PER_LINE + "\n")
-    printer.text(f"Printed at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    printer.text(f"Printed at\n")
+    printer.text(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
     # CUT
     printer.cut()
     printer.close()
     print("✅ ToDo summary printed successfully!")
+    return True
+
+  except Exception as e:
+    print("❌ Failed to print:", e)
+    raise
+  
+def print_logbook_receipt(target_date: str, list_of_logs: list):
+  """Print a logbook receipt."""
+  try:
+    printer = Network(PRINTER_IP, PRINTER_PORT, timeout=10)
+    printer.profile.profile_data["media"]["width"]["pixels"] = MEDIA_WIDTH_PIXELS
+
+    # MAIN HEADER
+    printer._raw(b'\x1b\x40')  # ESC/POS command to initialize printer
+    printer._raw(b'\x1b\x45\x01')  # ESC/POS command for bold on
+    printer._raw(b'\x1b\x4d\x01') # ESC/POS command for emphasized mode on
+    printer._raw(b'\x1d\x21\x11')  # ESC/POS command for change width and height
+    printer.set(align='center')
+    printer.text("Logbook\n")
+    printer._raw(b'\x1d\x21\x10')  # ESC/POS command for change width and height
+    printer.text(f"{target_date} • {len(list_of_logs)} {('logs' if len(list_of_logs) != 1 else 'log')}\n")
+    printer._raw(b'\x1d\x21\x00') # ESC/POS command for normal size
+    printer._raw(b'\x1b\x45\x00')  # ESC/POS command for bold off
+    printer._raw(b'\x1b\x4d\x00') # ESC/POS command for emphasized mode off
+    printer.text("-" * CHARS_PER_LINE + "\n")
+
+    for log in list_of_logs:
+      printer.set(align='left')
+      if log['logged_on'] and log['logged_on'].strip():
+        logged_on = log['logged_on'].strip()
+        try:
+          time_value = datetime.fromisoformat(logged_on).strftime('%H:%M')
+        except ValueError:
+          time_value = logged_on  # fallback to original value if parsing fails
+        header_text = f"[{time_value}] {log['title']}"
+      wrapped_title = textwrap.wrap(header_text, width=CHARS_PER_LINE - 2)
+      for line in wrapped_title:
+        if line == wrapped_title[0]:
+          printer.text(f"• {line}\n")
+        else:
+          printer.text(f"{line}\n")
+      if log['project'] and log['project'].strip():
+        printer.text(f"  {log['project']}\n")
+      if log['log'] and log['log'].strip():
+        wrapped_description = textwrap.wrap(log['log'], width=CHARS_PER_LINE - SPECIAL_INDENT)
+        for line in wrapped_description:
+          printer.text(f"{' ' * SPECIAL_INDENT}{line}\n")
+      if log != list_of_logs[-1]:
+        printer.text("\n")
+
+    # FOOTER: print timestamp
+    printer.set(align='center')
+    printer.text("-" * CHARS_PER_LINE + "\n")
+    printer.text(f"Printed at\n")
+    printer.text(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+    # CUT
+    printer.cut()
+    printer.close()
+    print("✅ Logbook printed successfully!")
     return True
 
   except Exception as e:

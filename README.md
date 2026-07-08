@@ -15,6 +15,7 @@ The following environment variables can be set to configure the package:
 | `NOTION_TOKEN` | Notion integration token used to authenticate API requests | `secret_xxx` |
 | `NOTION_TASKS_ID` | Notion database/data_source ID containing tasks | `xxxxx-xxxx-xxxx-xxxxxxxxxxxx` |
 | `NOTION_PROJECTS_ID` | Notion database/data_source ID containing projects | `xxxxx-xxxx-xxxx-xxxxxxxxxxxx` |
+| `NOTION_LOGBOOK_ID` | Notion database/data_source ID containing tasks logbook | `xxxxx-xxxx-xxxx-xxxxxxxxxxxx` |
 | `NOTION_PRINT_TAG` | Property name used to mark printed tasks | `Printed` |
 | `BASE_URL` | Base URL of the running app (used in links) | `http://localhost:8000` |
 | `PRINTER_IP` | IP address of the network printer | `127.0.0.1` |

@@ -1,12 +1,12 @@
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI, APIRouter, Request, HTTPException
+from fastapi import Body, FastAPI, APIRouter, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
-from sc_task_receipts.notion_api import get_tasks_to_print, get_todo_summary_to_print, mark_task_as_printed, unmark_task_as_printed, mark_task_as_done, get_task_details, refresh_projects
-from sc_task_receipts.printing import print_task_receipt, print_todo_summary_receipt
+from sc_task_receipts.notion_api import get_tasks_to_print, get_todo_summary_to_print, get_logs_to_print, mark_task_as_printed, unmark_task_as_printed, mark_task_as_done, get_task_details, refresh_projects
+from sc_task_receipts.printing import print_task_receipt, print_todo_summary_receipt, print_logbook_receipt
 
 load_dotenv()
 
@@ -55,11 +55,24 @@ def print_tasks():
 @api_v1_router.post("/tasks/summary/print")
 def print_todo_summary():
   tasks = get_todo_summary_to_print()
+  if not tasks:
+    return {"message": "No tasks found for summary"}
   try:
     print_todo_summary_receipt(tasks)
     return {"message": "ToDo summary printed"}
   except Exception as e:
     raise HTTPException(status_code=500, detail={"message": "ToDo summary failed to print", "error": str(e)})
+  
+@api_v1_router.post("/tasks/logbook/print")
+def print_logbook(target_date: str = Body(..., embed=True)):
+  logs = get_logs_to_print(target_date)
+  if not logs:
+    return {"message": f"No logs found for {target_date}"}
+  try:
+    print_logbook_receipt(target_date, logs)
+    return {"message": "Logbook printed"}
+  except Exception as e:
+    raise HTTPException(status_code=500, detail={"message": "Logbook failed to print", "error": str(e)})
 
 @api_v1_router.get("/tasks/{task_id}")
 def get_task(task_id: str):
