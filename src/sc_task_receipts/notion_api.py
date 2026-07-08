@@ -162,7 +162,7 @@ def get_tasks_to_print():
         {
           "and": [
             {
-              "property": "Done",
+              "property": "Status",
               "status": {
                 "does_not_equal": "Done"
               }
@@ -184,7 +184,7 @@ def get_tasks_to_print():
         {
           "and": [
             {
-              "property": "Done",
+              "property": "Status",
               "status": {
                 "does_not_equal": "Done"
               }
@@ -216,7 +216,7 @@ def get_todo_summary_to_print():
         {
           "and": [
             {
-              "property": "Done",
+              "property": "Status",
               "status": {
                 "does_not_equal": "Done"
               }
@@ -232,7 +232,7 @@ def get_todo_summary_to_print():
         {
           "and": [
             {
-              "property": "Done",
+              "property": "Status",
               "status": {
                 "does_not_equal": "Done"
               }
@@ -274,7 +274,7 @@ def mark_task_as_done(id: str):
   notion.pages.update(
     page_id=id,
     properties={
-      "Done": {
+      "Status": {
         "status": {
           "name": "Done"
         }
@@ -304,7 +304,7 @@ def get_task_details(id: str):
     "due_date": props.get("Due date")["date"]["start"] if props.get("Due date") and props.get("Due date").get("date") else "",
     "description": props.get("Description")["rich_text"][0]["plain_text"] if props.get("Description") and props.get("Description").get("rich_text") else "",
     "printed": props.get("Printed")["checkbox"] if props.get("Printed") and props.get("Printed").get("checkbox") else False,
-    "done": True if props.get("Done") and props.get("Done").get("status") and props.get("Done")["status"].get("name") == "Done" else False,
+    "done": True if props.get("Status") and props.get("Status").get("status") and props.get("Status")["status"].get("name") == "Done" else False,
   }
   
   return task
