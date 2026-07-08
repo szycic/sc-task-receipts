@@ -191,7 +191,9 @@ def print_logbook_receipt(target_date: str, list_of_logs: list):
     printer.text("-" * CHARS_PER_LINE + "\n")
 
     for log in list_of_logs:
+      
       printer.set(align='left')
+      
       if log['logged_on'] and log['logged_on'].strip():
         logged_on = log['logged_on'].strip()
         try:
@@ -199,18 +201,25 @@ def print_logbook_receipt(target_date: str, list_of_logs: list):
         except ValueError:
           time_value = logged_on  # fallback to original value if parsing fails
         header_text = f"[{time_value}] {log['title']}"
+      else:
+        header_text = log['title']
+        
       wrapped_title = textwrap.wrap(header_text, width=CHARS_PER_LINE - 2)
+      
       for line in wrapped_title:
         if line == wrapped_title[0]:
           printer.text(f"• {line}\n")
         else:
           printer.text(f"{line}\n")
+          
       if log['project'] and log['project'].strip():
         printer.text(f"  {log['project']}\n")
+        
       if log['log'] and log['log'].strip():
-        wrapped_description = textwrap.wrap(log['log'], width=CHARS_PER_LINE - SPECIAL_INDENT)
-        for line in wrapped_description:
+        wrapped_log = textwrap.wrap(log['log'], width=CHARS_PER_LINE - SPECIAL_INDENT)
+        for line in wrapped_log:
           printer.text(f"{' ' * SPECIAL_INDENT}{line}\n")
+          
       if log != list_of_logs[-1]:
         printer.text("\n")
 
