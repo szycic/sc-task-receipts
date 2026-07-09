@@ -25,6 +25,8 @@ The following environment variables can be set to configure the package:
 | `RECEIPT_NUMBER_RESET_AT` | Number at which the receipt number resets to 1 | `99` |
 | `DB_PATH` | Path to the SQLite database file for counters (creates its own file if missing or empty) | `~/data/counters.sqlite3` |
 | `NO_PROJECT_TEXT` | Text to use when a task has no associated project | `No Project` |
+| `PRINT_NOTES` | Whether to print a notes section on the receipt (1 for yes, 0 for no) | `1` |
+| `PRINT_NOTES_LINES` | Number of lines to allocate for the notes section | `6` |
 
 ## Installation
 To install the package, run:

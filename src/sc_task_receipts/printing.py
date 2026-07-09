@@ -20,6 +20,10 @@ MEDIA_WIDTH_PIXELS = PIXELS_MAP.get(PAPER_WIDTH_MM, 576)
 CHARS_PER_LINE_MAP = {58: 32, 80: 48}
 CHARS_PER_LINE = CHARS_PER_LINE_MAP.get(PAPER_WIDTH_MM, 48)
 
+# Notes area configuration (POS-friendly)
+PRINT_NOTES = os.getenv("PRINT_NOTES", "1") == "1"
+PRINT_NOTES_LINES = int(os.getenv("PRINT_NOTES_LINES", 6))
+
 if not PRINTER_IP:
     raise ValueError("PRINTER_IP is not set in .env!")
 
@@ -92,7 +96,15 @@ def print_task_receipt(id: str, project: str, priority: str, title: str, planned
       printer.text("\n")
     printer.set(align='center')
     printer.text("-" * CHARS_PER_LINE + "\n")
-      
+
+    # NOTES: small writable area for pen notes
+    if PRINT_NOTES:
+      printer.set(align='left')
+      printer.text("Notes\n")
+      for _ in range(PRINT_NOTES_LINES):
+        printer.text("\n")
+      printer.text("-" * CHARS_PER_LINE + "\n")
+
     # QR
     qr_data = f"{BASE_URL}/tasks/{id}"
     printer.set(align='center')
