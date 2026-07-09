@@ -114,7 +114,8 @@ def print_task_receipt(id: str, project: str, priority: str, title: str, planned
 
     # FOOTER: print timestamp
     printer.set(align='center')
-    printer.text(f"Printed at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    printer.text(f"Printed at")
+    printer.text(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
     # CUT
     printer.cut()
