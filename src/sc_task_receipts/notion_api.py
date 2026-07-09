@@ -192,8 +192,7 @@ def _fetch_logs_with_filter_sort(filter_dict, sorts):
     }
 
     logs.append(log)
-
-  logs.sort(key=_sort_key)
+    
   return logs
 
 def get_tasks_to_print():
