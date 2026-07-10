@@ -1,5 +1,5 @@
 # SC Task Receipts
-This repository contains the source code for the `sc-task-receipts` package.
+This repository contains the source code for the `sc_task_receipts` package.
 
 The app is written to be compatible with my Notion database schema — it expects properties such as `Name`, `Project` (relation), `Priority` (select), `Planned start`, `Due date`, `Description`, `Printed` (checkbox) and `Done` (status).
 
