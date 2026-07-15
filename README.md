@@ -5,8 +5,6 @@ The app is written to be compatible with my Notion database schema — it expect
 
 It is intended for personal/local‑network use and does not include production authentication or any kind of additional security by default. If you expose the app beyond a trusted LAN, add authentication, TLS, and restrict access to sensitive API endpoints.
 
-Due to time constraints, some HTML/CSS in this project was generated with AI assistance and has been reviewed and edited by me.
-
 ## Environment Variables
 The following environment variables can be set to configure the package:
 
