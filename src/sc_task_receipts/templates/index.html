@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Task Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
@@ -8,6 +9,7 @@
 </head>
 <body>
 <div class="container">
+  <!-- 1. Header and Batch Controls -->
   <div class="header">
     <div class="header-top">
       <h1 style="margin:0">Tasks to Print</h1>
@@ -21,6 +23,7 @@
     </div>
   </div>
 
+  <!-- 2. Dynamic Task Card Grid Layout -->
   {% if tasks %}
   <div id="tasks-grid" class="tasks-grid">
     {% for t in tasks %}
@@ -44,10 +47,10 @@
   {% endif %}
 </div>
 
-<!-- Toast container -->
+<!-- 3. Global Notification Toasts Area -->
 <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
-<!-- Busy overlay (hidden by default) -->
+<!-- 4. Blocking Loading Busy Overlay (Shown during printer I/O) -->
 <div id="busy-overlay" class="busy-overlay hidden" aria-hidden="true">
   <div class="busy-box">
     <div class="spinner" aria-hidden="true"></div>
@@ -55,7 +58,7 @@
   </div>
 </div>
 
-<!-- Logbook date picker modal -->
+<!-- 5. Logbook Date Range Picker Modal -->
 <div id="logbook-modal" class="busy-overlay hidden" aria-hidden="true">
   <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="logbook-title">
     <div class="modal-title" id="logbook-title">Choose logbook date</div>
@@ -71,34 +74,52 @@
 </div>
 
 <script>
+/**
+ * Display a temporary floating toast notification to the user.
+ * 
+ * @param {string} type - Toast semantic theme type ('info', 'success', 'error').
+ * @param {string|object} message - Message body text or error description object.
+ * @param {number} [duration=3000] - Lifespan duration of notification in milliseconds.
+ */
 function showToast(type, message, duration = 3000){
   const container = document.getElementById('toast-container');
   const t = document.createElement('div');
   t.className = `toast ${type} show`;
-  // ensure message is a string
+  
+  // Parse message structure variations safely
   let msg = message;
   if (typeof msg === 'object'){
     msg = msg && (msg.detail || msg.message) ? (msg.detail || msg.message) : JSON.stringify(msg);
   }
   t.textContent = msg;
   container.appendChild(t);
-  // longer for errors
+  
+  // Extend screen visibility for error alerts to facilitate debugging
   const hideAfter = type === 'error' ? Math.max(duration, 5000) : duration;
   setTimeout(()=>{ t.classList.remove('show'); t.classList.add('hide'); }, hideAfter);
   setTimeout(()=>{ container.removeChild(t); }, hideAfter + 300);
 }
 
-// helper to print a single task from server-rendered buttons
+/**
+ * Handle a single task printing request triggered from server-side rendered buttons.
+ * Resolves title directly from the DOM mapping, preventing stale arguments.
+ * 
+ * @param {string} id - The task ID.
+ */
 function printTask(id){
-  // read title from the DOM and forward to shared client function
   const card = document.querySelector(`.task-card[data-id="${id}"]`);
   const titleElem = card ? card.querySelector('.task-title') : null;
   const title = titleElem ? titleElem.textContent.trim() : undefined;
-  // call the shared client function without a button element
   printTaskClient(id, null, title);
 }
 
-// shared client-side print logic used by dynamic buttons
+/**
+ * Perform API request to trigger the thermal printer for a specific task ID.
+ * 
+ * @param {string} id - Task UUID string.
+ * @param {HTMLElement|null} btn - Button element to disable during process.
+ * @param {string} [title] - Optional title for showing user-friendly toast.
+ */
 async function printTaskClient(id, btn, title){
   let printed = false;
   try{
@@ -108,14 +129,13 @@ async function printTaskClient(id, btn, title){
 
     const res = await fetch(`/api/v1/tasks/${id}/print`, { method: 'POST' });
     let body = {};
-    try{ body = await res.json(); }catch(e){ /* not json */ }
+    try{ body = await res.json(); }catch(e){ /* body is not JSON */ }
 
     if(!res.ok){
       const msg = body.detail || body.message || `Printing failed (status ${res.status})`;
       showToast('error', msg);
       console.error('Print failed for', id, body);
     } else {
-      // success
       const msg = body.message || 'Printed';
       showToast('success', msg);
       if(body.failures && body.failures.length){
@@ -123,7 +143,7 @@ async function printTaskClient(id, btn, title){
         console.error('Print failures', body.failures);
       }
       printed = true;
-      // refresh tasks so printed state updates
+      // Re-query the database to reflect printed status changes in view
       await refreshTasks();
     }
   }catch(e){
@@ -135,10 +155,15 @@ async function printTaskClient(id, btn, title){
   }
 }
 
+/**
+ * Clear current card grid and dynamically build DOM elements for retrieved tasks.
+ * 
+ * @param {Array} tasks - Array of task detail objects.
+ */
 function renderTasks(tasks){
   const grid = document.getElementById('tasks-grid');
   if(!grid){
-    // if no grid present, create and insert
+    // Build task card layout container if not present
     const container = document.querySelector('.container');
     const newGrid = document.createElement('div');
     newGrid.id = 'tasks-grid';
@@ -147,14 +172,19 @@ function renderTasks(tasks){
   }
   const g = document.getElementById('tasks-grid');
   g.innerHTML = '';
+  
+  // Remove "No tasks" placeholder card if present
   const noTasksElem = document.getElementById('no-tasks');
   if(noTasksElem) noTasksElem.remove();
+  
   if(!tasks || tasks.length === 0){
     const nt = document.createElement('div');
     nt.id = 'no-tasks'; nt.className='center muted'; nt.textContent='No tasks to print';
     g.parentNode.appendChild(nt);
     return;
   }
+  
+  // Construct card nodes sequentially
   tasks.forEach(t=>{
     const card = document.createElement('div');
     card.className='task-card';
@@ -184,6 +214,9 @@ function renderTasks(tasks){
   });
 }
 
+/**
+ * Fetch tasks data payload from REST API.
+ */
 async function refreshTasks(){
   try{
     const res = await fetch('/api/v1/tasks');
@@ -192,9 +225,13 @@ async function refreshTasks(){
   }catch(e){ console.error(e); }
 }
 
-// Polling auto-refresh (skip when tab is hidden), similar to task_details
-const POLL_INTERVAL = 8000; // ms
+// Background auto-refresh controller variables
+const POLL_INTERVAL = 8000;
 let _pollTimer = null;
+
+/**
+ * Start the polling loop. Skip updates when page is backgrounded or tab is hidden.
+ */
 function startPolling(){
   if(_pollTimer) clearInterval(_pollTimer);
   _pollTimer = setInterval(()=>{
@@ -204,12 +241,17 @@ function startPolling(){
   }, POLL_INTERVAL);
 }
 
-// refresh immediately when tab becomes visible
+// Immediately query updates on tab refocus/visible changes
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) refreshTasks(); });
 
-// start on load
+// Run initializer routines
 document.addEventListener('DOMContentLoaded', ()=>{ refreshTasks(); startPolling(); });
 
+/**
+ * Display the busy loading spinner overlay.
+ * 
+ * @param {string} [message='Working...'] - Progress dialog text to show.
+ */
 function showBusy(message = 'Working...'){
   const overlay = document.getElementById('busy-overlay');
   if(!overlay) return;
@@ -218,6 +260,10 @@ function showBusy(message = 'Working...'){
   const txt = overlay.querySelector('.busy-text');
   if(txt) txt.textContent = message;
 }
+
+/**
+ * Hide the busy loading spinner overlay.
+ */
 function hideBusy(){
   const overlay = document.getElementById('busy-overlay');
   if(!overlay) return;
@@ -225,36 +271,37 @@ function hideBusy(){
   overlay.setAttribute('aria-hidden', 'true');
 }
 
+// Batch print trigger listener
 document.getElementById("print-all").addEventListener("click", async () => {
   const btn = document.getElementById('print-all');
-    try{
-      btn.disabled = true;
-      showBusy('Printing all tasks...');
-      const response = await fetch("/api/v1/tasks/print", { method: "POST" });
-      let result = {};
-      try{ result = await response.json(); }catch(e){ /* not json */ }
-      if(!response.ok){
-        const msg = result.detail || result.message || `Print request failed (status ${response.status})`;
-        showToast('error', msg);
-        console.error('Print-all failed', result);
-        return;
-      }
-
-      if(result.failures && result.failures.length){
-        showToast('error', `${result.successes || 0} printed, ${result.failures.length} failed`);
-        console.error('Print failures', result.failures);
-      }else{
-        showToast('success', result.message || 'Printed');
-      }
-      // fetch fresh tasks and re-render
-      await refreshTasks();
-    }catch(e){
-      console.error('Print-all request error', e);
-      showToast('error', 'Request failed: ' + (e && e.message ? e.message : String(e)));
+  try{
+    btn.disabled = true;
+    showBusy('Printing all tasks...');
+    const response = await fetch("/api/v1/tasks/print", { method: "POST" });
+    let result = {};
+    try{ result = await response.json(); }catch(e){ /* body is not JSON */ }
+    if(!response.ok){
+      const msg = result.detail || result.message || `Print request failed (status ${response.status})`;
+      showToast('error', msg);
+      console.error('Print-all failed', result);
+      return;
     }
-    finally{ btn.disabled = false; hideBusy(); }
+
+    if(result.failures && result.failures.length){
+      showToast('error', `${result.successes || 0} printed, ${result.failures.length} failed`);
+      console.error('Print failures', result.failures);
+    }else{
+      showToast('success', result.message || 'Printed');
+    }
+    await refreshTasks();
+  }catch(e){
+    console.error('Print-all request error', e);
+    showToast('error', 'Request failed: ' + (e && e.message ? e.message : String(e)));
+  }
+  finally{ btn.disabled = false; hideBusy(); }
 });
 
+// ToDo summary sheet trigger listener
 document.getElementById("print-summary").addEventListener("click", async () => {
   const btn = document.getElementById('print-summary');
   try{
@@ -262,7 +309,7 @@ document.getElementById("print-summary").addEventListener("click", async () => {
     showBusy('Printing ToDo summary...');
     const res = await fetch('/api/v1/tasks/summary/print', { method: 'POST' });
     let body = {};
-    try{ body = await res.json(); }catch(e){ /* not json */ }
+    try{ body = await res.json(); }catch(e){ /* body is not JSON */ }
     if(!res.ok){
       const msg = body.detail || body.message || `Summary print failed (status ${res.status})`;
       showToast('error', msg);
@@ -279,6 +326,7 @@ document.getElementById("print-summary").addEventListener("click", async () => {
   }
 });
 
+// Notion projects local cache invalidation listener
 document.getElementById("refresh-projects").addEventListener("click", async () => {
   const btn = document.getElementById('refresh-projects');
   try{
@@ -286,20 +334,34 @@ document.getElementById("refresh-projects").addEventListener("click", async () =
     const res = await fetch('/api/v1/projects/refresh', { method: 'POST' });
     let body = {};
     try{ body = await res.json(); }catch(e){}
-    if(!res.ok){ const msg = body.detail || body.message || `Refresh failed (status ${res.status})`; showToast('error', msg); console.error('Refresh failed', body); return; }
+    if(!res.ok){
+      const msg = body.detail || body.message || `Refresh failed (status ${res.status})`;
+      showToast('error', msg);
+      console.error('Refresh failed', body);
+      return;
+    }
     showToast('success', `Projects refreshed`);
-    // refresh visible tasks so project names update
     await refreshTasks();
-  }catch(e){ console.error('Refresh request error', e); showToast('error', 'Request failed: ' + (e && e.message ? e.message : String(e))); }
+  }catch(e){
+    console.error('Refresh request error', e);
+    showToast('error', 'Request failed: ' + (e && e.message ? e.message : String(e)));
+  }
   finally{ btn.disabled = false; }
 });
 
+/**
+ * Utility helper to get yesterday's ISO date string (YYYY-MM-DD).
+ * Used to default the logbook query input field.
+ * 
+ * @returns {string} YYYY-MM-DD date string.
+ */
 function yesterdayIso(){
   const d = new Date();
   d.setDate(d.getDate() - 1);
   return d.toISOString().slice(0, 10);
 }
 
+// Modal popup open/close functions
 function openLogbookPopup(){
   const modal = document.getElementById('logbook-modal');
   const input = document.getElementById('logbook-date');
@@ -314,9 +376,11 @@ function closeLogbookPopup(){
   modal.setAttribute('aria-hidden', 'true');
 }
 
+// Register modal control listeners
 document.getElementById("print-logbook").addEventListener("click", openLogbookPopup);
 document.getElementById("logbook-cancel").addEventListener("click", closeLogbookPopup);
 
+// Modal date logbook printing confirmation action
 document.getElementById("logbook-confirm").addEventListener("click", async () => {
   const btn = document.getElementById('logbook-confirm');
   const targetDate = document.getElementById('logbook-date').value;
@@ -336,7 +400,7 @@ document.getElementById("logbook-confirm").addEventListener("click", async () =>
     });
 
     let body = {};
-    try { body = await res.json(); } catch(e) { /* not json */ }
+    try { body = await res.json(); } catch(e) { /* body is not JSON */ }
 
     if (!res.ok) {
       const msg = body.detail || body.message || `Logbook print failed (status ${res.status})`;

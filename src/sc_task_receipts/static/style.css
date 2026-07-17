@@ -1,420 +1,683 @@
-/* app/static/style.css */
-/* Modern responsive styles for SC Task Receipts */
-/* CSS variables for theme; desktop-first with mobile breakpoints */
+/* ==========================================================================
+   SC TASK RECEIPTS DASHBOARD STYLESHEET
+   ========================================================================== */
 
-/* Theme variables (colors, spacing) */
-:root{
-  --bg: #f6f8fb; /* page background gradient start */
-  --card: #ffffff; /* card background */
-  --muted: #6b7280; /* secondary text */
-  --accent: #0ea5a4; /* primary accent */
-  --accent-600: #059e9d; /* hover accent */
-  --danger: #ef4444; /* destructive */
-  --shadow: 0 6px 18px rgba(13, 23, 32, 0.08);
-  --radius: 10px; /* default border radius */
-  --max-width: 980px; /* centered container width */
-  --gap: 16px; /* grid/gap */
-  --touch: 44px; /* minimum touch target height */
-  --font-base: 15px;
+/* --------------------------------------------------------------------------
+   1. DESIGN SYSTEM & ROOT VARIABLES
+   -------------------------------------------------------------------------- */
+:root {
+  --bg: #f6f8fb;                 /* Page background gradient start */
+  --card: #ffffff;               /* Card/container background color */
+  --muted: #6b7280;              /* Secondary gray text color */
+  --accent: #0ea5a4;             /* Brand primary teal accent color */
+  --accent-600: #059e9d;         /* Brand accent hover color */
+  --danger: #ef4444;             /* Error and high priority red badge */
+  --shadow: 0 6px 18px rgba(13, 23, 32, 0.08); /* Card container box shadow */
+  --radius: 10px;                /* Standard border corner radius */
+  --max-width: 980px;            /* Max width of content container */
+  --gap: 16px;                   /* Grid item gap */
+  --touch: 44px;                 /* Interactive targets minimum vertical touch target */
+  --font-base: 15px;             /* Base body font size */
 }
 
-/* Reset and base typography */
-*{box-sizing:border-box}
-html{height:100%}
-body{min-height:100vh}
-body{
-  margin:0;
+/* --------------------------------------------------------------------------
+   2. RESET & BASE TYPOGRAPHY
+   -------------------------------------------------------------------------- */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   background: linear-gradient(180deg, var(--bg), #eef2f6);
   background-attachment: fixed;
-  color:#0f172a;
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
-  line-height:1.45;
-  font-size:var(--font-base);
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.45;
+  font-size: var(--font-base);
 }
 
-/* Container */
-.container{
-  max-width:var(--max-width);
-  margin:32px auto;
-  padding:24px;
+/* --------------------------------------------------------------------------
+   3. PAGE LAYOUT & CONTAINER
+   -------------------------------------------------------------------------- */
+.container {
+  max-width: var(--max-width);
+  margin: 32px auto;
+  padding: 24px;
 }
 
-/* Header */
-.header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  margin-bottom:20px;
-}
-.header h1{font-size:20px;margin:0}
-.header .sub{color:var(--muted);font-size:13px;text-align:right;}
-.header > div:last-child{display:flex;align-items:center;gap:10px}
-
-/* Tasks grid / list */
-.tasks-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
-  gap:var(--gap);
+/* --------------------------------------------------------------------------
+   4. DASHBOARD HEADER
+   -------------------------------------------------------------------------- */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
 }
 
-/* Task card */
-.task-card{
-  background:var(--card);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  padding:16px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  transition:transform .12s ease, box-shadow .12s ease;
+.header h1 {
+  font-size: 20px;
+  margin: 0;
 }
-.task-card:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(13,23,32,0.12)}
 
-/* Compact rows inside card */
-.task-row{display:flex;align-items:center;gap:12px}
-.task-title{font-weight:600;font-size:15px}
-.task-meta{font-size:12px;color:var(--muted)}
-
-/* Priority badges (semantic classes) */
-.priority{
-  display:inline-block;padding:4px 8px;border-radius:999px;font-weight:600;font-size:12px;color:#fff
+.header .sub {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: right;
 }
-.priority.optional{background:#3b82f6}
-.priority.low{background:#10b981}
-.priority.medium{background:#f59e0b}
-.priority.high{background:#ef4444}
 
-.project-badge{font-size:12px;color:var(--muted)}
+.header > div:last-child {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
-/* Actions */
-.task-actions{display:flex;gap:8px;margin-top:auto}
+/* --------------------------------------------------------------------------
+   5. TASKS GRID & CARD COMPONENT
+   -------------------------------------------------------------------------- */
+.tasks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--gap);
+}
 
-/* Ensure action buttons share available space (desktop + mobile) */
+.task-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+
+.task-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(13, 23, 32, 0.12);
+}
+
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.task-title {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.task-meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* --------------------------------------------------------------------------
+   6. SEMANTIC BADGES (PRIORITY & PROJECT)
+   -------------------------------------------------------------------------- */
+.priority {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 12px;
+  color: #fff;
+}
+
+.priority.optional { background: #3b82f6; }
+.priority.low      { background: #10b981; }
+.priority.medium   { background: #f59e0b; }
+.priority.high     { background: #ef4444; }
+
+.project-badge {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* --------------------------------------------------------------------------
+   7. INTERACTIVE ACTION BUTTONS
+   -------------------------------------------------------------------------- */
+.task-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+/* Button sizing adjustments inside card grid */
 .task-actions .btn,
-.task-actions .btn.btn-sm{
-  flex:1;
-  min-width:0;
-  justify-content:center;
+.task-actions .btn.btn-sm {
+  flex: 1;
+  min-width: 0;
+  justify-content: center;
 }
 
-/* Buttons - unified simple style */
-.btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  padding:10px 14px;
-  border-radius:10px;
-  border:1px solid transparent;
-  cursor:pointer;
-  font-weight:600;
-  min-height:var(--touch);
-  background:linear-gradient(90deg,var(--accent),var(--accent-600));
-  color:#fff;
-  transition:transform .08s ease, box-shadow .12s ease, background .12s ease, color .12s ease, opacity .12s ease;
-  font-size:15px; /* explicit uniform size */
-  line-height:1.2;
-  text-decoration:none; /* make anchors look like buttons */
-  -webkit-font-smoothing:antialiased;
+/* Global button styling rules */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 600;
+  min-height: var(--touch);
+  background: linear-gradient(90deg, var(--accent), var(--accent-600));
+  color: #fff;
+  transition: transform .08s ease, box-shadow .12s ease, background .12s ease, color .12s ease, opacity .12s ease;
+  font-size: 15px;
+  line-height: 1.2;
+  text-decoration: none;
+  -webkit-font-smoothing: antialiased;
 }
-/* Ensure anchors with .btn behave the same */
-a.btn{display:inline-flex}
-button.btn{display:inline-flex}
-.btn:hover{transform:translateY(-1px)}
-.btn:active{transform:translateY(1px)}
-.btn:focus{outline:none}
-.btn:focus-visible{box-shadow:0 0 0 4px rgba(14,165,164,0.12);border-color:transparent}
+
+a.btn { display: inline-flex; }
+button.btn { display: inline-flex; }
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:focus {
+  outline: none;
+}
+
+.btn:focus-visible {
+  box-shadow: 0 0 0 4px rgba(14, 165, 164, 0.12);
+  border-color: transparent;
+}
 
 /* Disabled state */
-.btn[disabled], .btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;box-shadow:none}
+.btn[disabled],
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
 
-/* Size / layout helpers */
-.btn-sm{padding:6px 10px;min-height:36px;font-size:14px;border-radius:8px}
-.btn-block{width:100%;display:flex}
+/* Sizing variations */
+.btn-sm {
+  padding: 6px 10px;
+  min-height: 36px;
+  font-size: 14px;
+  border-radius: 8px;
+}
 
-/* Secondary button variant */
-.btn-secondary{
+.btn-block {
+  width: 100%;
+  display: flex;
+}
+
+/* Secondary gray button variant */
+.btn-secondary {
   background: linear-gradient(90deg, #e2e8f0, #cbd5e1);
   color: #0f172a;
 }
 
-.btn-secondary:hover{
+.btn-secondary:hover {
   filter: brightness(0.98);
 }
 
-/* Neutral button variant */
-.btn-neutral{
-  background: linear-gradient(90deg,#64748b,#334155);
-  color:#fff;
-  border:1px solid transparent;
-  box-shadow:none;
-  padding:10px 12px;
-  font-size:14px;
-  border-radius:10px;
-  min-height:var(--touch);
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
+/* Dark Slate neutral action variant */
+.btn-neutral {
+  background: linear-gradient(90deg, #64748b, #334155);
+  color: #fff;
+  border: 1px solid transparent;
+  box-shadow: none;
+  padding: 10px 12px;
+  font-size: 14px;
+  border-radius: 10px;
+  min-height: var(--touch);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
-.btn-neutral:hover{ filter:brightness(0.98); }
-.btn-neutral:active{ filter:brightness(0.94); }
 
-/* Specific action IDs: neutral and prominent variants */
-#unprint{
-  background:#fff;
-  color:var(--muted);
-  border:1px solid #e6edf2;
-  box-shadow:none;
+.btn-neutral:hover  { filter: brightness(0.98); }
+.btn-neutral:active { filter: brightness(0.94); }
+
+/* Specific buttons logic for task_details page */
+#unprint {
+  background: #fff;
+  color: var(--muted);
+  border: 1px solid #e6edf2;
+  box-shadow: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: 700;
 }
-#unprint:hover{background:#fafbfc}
+#unprint:hover { background: #fafbfc; }
 
-#done{
-  /* use same look as unified .btn */
-  background:linear-gradient(90deg,var(--accent),var(--accent-600));
-  color:#fff;
-  border-color:transparent;
-  box-shadow:0 8px 20px rgba(14,165,164,0.12);
+#done {
+  background: linear-gradient(90deg, var(--accent), var(--accent-600));
+  color: #fff;
+  border: 0;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(14, 165, 164, 0.12);
 }
-#done:hover{filter:brightness(.98)}
+#done:hover { filter: brightness(.98); }
 
-/* Print Summary button — match primary .btn styling so it appears like Print All */
-#print-summary{background:linear-gradient(90deg,#f59e0b,#f97316);color:#fff;padding:10px 12px;border-color:transparent;box-shadow:none}
-#print-summary:hover{filter:brightness(0.96)}
+/* Yellow/Orange daily summary action */
+#print-summary {
+  background: linear-gradient(90deg, #f59e0b, #f97316);
+  color: #fff;
+  padding: 10px 12px;
+  border-color: transparent;
+  box-shadow: none;
+}
+#print-summary:hover { filter: brightness(0.96); }
 
-/* Make Print All visually distinct (teal -> blue gradient) */
-#print-all{background:linear-gradient(90deg,#06b6d4,#0ea5a4);color:#fff;padding:10px 12px;border-color:transparent;box-shadow:0 6px 18px rgba(6,182,212,0.08)}
-#print-all:hover{filter:brightness(0.98)}
+/* Main batch print tasks action */
+#print-all {
+  background: linear-gradient(90deg, #06b6d4, #0ea5a4);
+  color: #fff;
+  padding: 10px 12px;
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(6, 182, 212, 0.08);
+}
+#print-all:hover { filter: brightness(0.98); }
 
-/* Make Print Log visually distinct */
-#print-logbook{background:linear-gradient(90deg,#8b5cf6,#7c3aed);color:#fff;padding:10px 12px;border-color:transparent;box-shadow:none}
-#print-logbook:hover{filter:brightness(0.96)}
+/* Purple logbook print action button */
+#print-logbook {
+  background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+  color: #fff;
+  padding: 10px 12px;
+  border-color: transparent;
+  box-shadow: none;
+}
+#print-logbook:hover { filter: brightness(0.96); }
 
-/* Ensure small screens can wrap header controls without overflow */
-@media (max-width:520px){
-  .header{flex-direction:column;align-items:stretch;gap:12px}
-  /* title + sub stay on one line, spaced apart */
-  .header-top{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px}
+/* --------------------------------------------------------------------------
+   8. DETAIL CARD VIEW LAYOUT
+   -------------------------------------------------------------------------- */
+.detail-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
 
-  /* ACTIONS ROW: keep buttons on a single line and make them share available space evenly */
-  .header > .header-actions{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:nowrap}
-  .header-actions .btn{flex:1 1 0;min-width:0;margin:0;padding:12px 10px}
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 20px;
+}
 
-  /* keep other mobile rules intact */
-  :root{--font-base:17px; --touch:56px; --gap:20px}
-  .container{padding:16px;margin:18px auto}
-  .header h1{font-size:20px}
+@media (max-width: 820px) {
+  .detail-grid { grid-template-columns: 1fr; }
+}
 
-  /* explicitly single column list for cards */
-  .tasks-grid{grid-template-columns:1fr;gap:var(--gap)}
+.detail-field {
+  margin-bottom: 12px;
+}
 
-  /* make cards more spacious for touch */
-  .task-card{padding:18px;gap:14px}
+.detail-field h3 {
+  margin: 0 0 6px 0;
+  font-size: 13px;
+  color: var(--muted);
+}
 
-  /* stack title and priority vertically and increase sizes */
-  .task-row{flex-direction:column;align-items:flex-start;gap:8px}
-  .task-title{font-size:18px}
-  .priority{width:100%;text-align:center;padding:10px 0;font-size:15px}
+.detail-field p {
+  margin: 0;
+  font-size: 15px;
+}
 
-  /* actions: keep buttons side-by-side on mobile and make them share space */
-  .task-actions{flex-direction:row;align-items:center;gap:8px}
-  /* ensure all action buttons share the same size and appearance */
-  .task-actions .btn,
-  .task-actions .btn.btn-sm{
-    flex:1;
-    min-width:0;
-    justify-content:center;
-    padding:12px 16px;
-    font-size:16px;
-    line-height:1.2;
-    min-height:var(--touch);
-    border-radius:12px;
+/* Anchors */
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+/* Fallback list tabular styles */
+.tasks-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tasks-table td,
+.tasks-table th {
+  padding: 10px;
+  border-bottom: 1px solid #f1f5f9;
+  text-align: left;
+}
+
+/* --------------------------------------------------------------------------
+   9. DIALOG MODALS & OVERLAYS
+   -------------------------------------------------------------------------- */
+.modal-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.modal-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.modal-field {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 16px;
+  margin-bottom: 16px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* --------------------------------------------------------------------------
+   10. TOAST NOTIFICATIONS
+   -------------------------------------------------------------------------- */
+#toast-container {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  min-width: 200px;
+  max-width: 360px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.12);
+  font-weight: 600;
+  transform: translateY(10px);
+  opacity: 0;
+  transition: transform .18s ease, opacity .18s ease;
+}
+
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.hide { transform: translateY(8px); opacity: 0; }
+
+.toast.info    { background: linear-gradient(90deg, var(--accent), var(--accent-600)); }
+.toast.success { background: linear-gradient(90deg, #34d399, #10b981); }
+.toast.error   { background: linear-gradient(90deg, #f97316, #ef4444); }
+
+/* --------------------------------------------------------------------------
+   11. BUSY SPINNER & BLOCKING OVERLAY
+   -------------------------------------------------------------------------- */
+.hidden {
+  display: none !important;
+}
+
+.busy-overlay {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 6, 23, 0.45);
+  z-index: 9998;
+}
+
+.busy-overlay.hidden {
+  background: transparent;
+  pointer-events: none;
+}
+
+.busy-box {
+  background: var(--card);
+  padding: 14px 16px;
+  border-radius: 12px;
+  box-shadow: 0 12px 36px rgba(2, 6, 23, 0.28);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  min-width: 220px;
+  max-width: min(92%, 420px);
+}
+
+.busy-box .spinner {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 4px solid rgba(15, 23, 42, 0.12);
+  border-top-color: var(--accent);
+  box-sizing: border-box;
+  animation: spin 1s linear infinite;
+}
+
+.busy-box .busy-text {
+  flex: 1 1 auto;
+  font-weight: 700;
+  color: var(--muted);
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* --------------------------------------------------------------------------
+   12. LAYOUT RESPONSIVENESS & BREAKPOINTS (MEDIA QUERIES)
+   -------------------------------------------------------------------------- */
+
+/* Medium/Tablet devices: single-column layouts for simplified card lists */
+@media (max-width: 820px) {
+  :root {
+    --font-base: 16px;
   }
-
-  /* metadata more readable */
-  .task-meta{font-size:14px;color:var(--muted)}
-  .project-badge{font-size:14px}
-
-  /* detail view readability */
-  .detail-field p{font-size:17px}
-}
-
-/* Task details layout */
-.detail-card{
-  background:var(--card);
-  border-radius:var(--radius);
-  padding:20px;
-  box-shadow:var(--shadow);
-}
-.detail-grid{display:grid;grid-template-columns:1fr 280px;gap:20px}
-@media (max-width:820px){.detail-grid{grid-template-columns:1fr}}
-
-.detail-field{margin-bottom:12px}
-.detail-field h3{margin:0 0 6px 0;font-size:13px;color:var(--muted)}
-.detail-field p{margin:0;font-size:15px}
-
-/* Links */
-a{color:var(--accent);text-decoration:none}
-a:hover{text-decoration:none}
-
-/* Table fallback */
-.tasks-table{width:100%;border-collapse:collapse}
-.tasks-table td,.tasks-table th{padding:10px;border-bottom:1px solid #f1f5f9;text-align:left}
-
-/* Utilities */
-.center{display:flex;align-items:center;justify-content:center}
-.muted{color:var(--muted)}
-.small{font-size:13px}
-
-/* Respect reduced motion */
-@media (prefers-reduced-motion: reduce){
-  *{transition:none!important}
-}
-
-/* Print styles */
-@media print{
-  body{background:#fff}
-  .container{max-width:640px;padding:0}
-  .task-card{box-shadow:none;border-radius:0;padding:8px}
-  .btn{display:none}
-}
-
-/* IDs used by task_details.html */
-#unprint, #done{padding:10px 14px;border-radius:8px;border:0;font-weight:700}
-#unprint{background:#f3f4f6;color:#111}
-#done{background:var(--accent);color:#fff}
-
-/* Modal styles */
-.modal-card{
-  background:var(--card);
-  border-radius:var(--radius);
-  padding:20px;
-  box-shadow:var(--shadow);
-}
-.modal-title{
-  font-size:18px;
-  font-weight:700;
-  margin-bottom:8px;
-}
-.modal-subtitle{
-  font-size:14px;
-  color:var(--muted);
-  margin-bottom:16px;
-}
-.modal-field{
-  width:100%;
-  padding:12px 16px;
-  border-radius:8px;
-  border:1px solid #d1d5db;
-  font-size:16px;
-  margin-bottom:16px;
-}
-.modal-actions{
-  display:flex;
-  gap:8px;
-  justify-content:flex-end;
-}
-
-/* Toast notifications */
-#toast-container{
-  position:fixed;
-  right:16px;
-  bottom:16px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  z-index:9999;
-  pointer-events:none;
-}
-.toast{
-  pointer-events:auto;
-  min-width:200px;
-  max-width:360px;
-  padding:12px 16px;
-  border-radius:10px;
-  color:#fff;
-  box-shadow:0 8px 24px rgba(2,6,23,0.12);
-  font-weight:600;
-  transform:translateY(10px);
-  opacity:0;
-  transition:transform .18s ease, opacity .18s ease;
-}
-.toast.show{transform:translateY(0);opacity:1}
-.toast.hide{transform:translateY(8px);opacity:0}
-.toast.info{background:linear-gradient(90deg,var(--accent),var(--accent-600))}
-.toast.success{background:linear-gradient(90deg,#34d399,#10b981)}
-.toast.error{background:linear-gradient(90deg,#f97316,#ef4444)}
-
-/* Busy overlay (shown while long operations are running) */
-.hidden { display: none !important; }
-.busy-overlay{position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,0.45);z-index:9998}
-.busy-overlay.hidden{background:transparent;pointer-events:none}
-/* Constrain the busy box so very long titles don't push layout around. Allow it to shrink on very small screens. */
-.busy-box{background:var(--card);padding:14px 16px;border-radius:12px;box-shadow:0 12px 36px rgba(2,6,23,0.28);display:flex;flex-direction:row;align-items:center;gap:12px;min-width:220px;max-width:min(92%,420px)}
-/* Keep spinner fixed size so it never shifts */
-.busy-box .spinner{flex:0 0 36px;width:36px;height:36px;border-radius:50%;border:4px solid rgba(15,23,42,0.12);border-top-color:var(--accent);box-sizing:border-box;animation:spin 1s linear infinite}
-/* Make the text take remaining space; ellipsize on larger screens to avoid pushing; allow wrap on very small screens */
-.busy-box .busy-text{flex:1 1 auto;font-weight:700;color:var(--muted);font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-
-@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-
-/* On very small screens allow the busy text to wrap instead of ellipsing so the message remains readable */
-@media (max-width:420px){
-  .busy-box{padding:12px 12px;gap:10px}
-  .busy-box .spinner{flex:0 0 28px;width:28px;height:28px;border-width:3px}
-  .busy-box .busy-text{white-space:normal;word-break:break-word;}
-}
-
-/* ensure overlay hides on print */
-@media print{ .busy-overlay{display:none !important} }
-
-/* Mobile: medium screens */
-@media (max-width:820px){
-  :root{--font-base:16px}
-  /* force single column on medium/narrow screens to avoid multiple narrow columns */
-  .tasks-grid{grid-template-columns:1fr}
-  .container{padding:20px}
-  .task-title{font-size:17px}
-}
-
-/* Mobile: small screens - bigger fonts, spacing and touch targets */
-@media (max-width:520px){
-  :root{--font-base:17px; --touch:56px; --gap:20px}
-  .container{padding:16px;margin:18px auto}
-  .header h1{font-size:20px}
-
-  /* explicitly single column list for cards */
-  .tasks-grid{grid-template-columns:1fr;gap:var(--gap)}
-
-  /* make cards more spacious for touch */
-  .task-card{padding:18px;gap:14px}
-
-  /* stack title and priority vertically and increase sizes */
-  .task-row{flex-direction:column;align-items:flex-start;gap:8px}
-  .task-title{font-size:18px}
-  .priority{width:100%;text-align:center;padding:10px 0;font-size:15px}
-
-  /* actions: keep buttons side-by-side on mobile and make them share space */
-  .task-actions{flex-direction:row;align-items:center;gap:8px}
-  /* ensure all action buttons share the same size and appearance */
-  .task-actions .btn,
-  .task-actions .btn.btn-sm{
-    flex:1;
-    min-width:0;
-    justify-content:center;
-    padding:12px 16px;
-    font-size:16px;
-    line-height:1.2;
-    min-height:var(--touch);
-    border-radius:12px;
+  .tasks-grid {
+    grid-template-columns: 1fr;
   }
+  .container {
+    padding: 20px;
+  }
+  .task-title {
+    font-size: 17px;
+  }
+}
 
-  /* metadata more readable */
-  .task-meta{font-size:14px;color:var(--muted)}
-  .project-badge{font-size:14px}
+/* Narrow/Mobile devices: stack elements vertically and optimize touch boundaries */
+@media (max-width: 520px) {
+  :root {
+    --font-base: 17px;
+    --touch: 56px;
+    --gap: 20px;
+  }
+  
+  .container {
+    padding: 16px;
+    margin: 18px auto;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .header-top {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .header > .header-actions {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+  
+  .header-actions .btn {
+    flex: 1 1 0;
+    min-width: 0;
+    margin: 0;
+    padding: 12px 10px;
+  }
+  
+  .tasks-grid {
+    grid-template-columns: 1fr;
+    gap: var(--gap);
+  }
+  
+  .task-card {
+    padding: 18px;
+    gap: 14px;
+  }
+  
+  .task-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .task-title {
+    font-size: 18px;
+  }
+  
+  .priority {
+    width: 100%;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 15px;
+  }
+  
+  .task-actions {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .task-actions .btn,
+  .task-actions .btn.btn-sm {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+    padding: 12px 16px;
+    font-size: 16px;
+    line-height: 1.2;
+    min-height: var(--touch);
+    border-radius: 12px;
+  }
+  
+  .task-meta {
+    font-size: 14px;
+    color: var(--muted);
+  }
+  
+  .project-badge {
+    font-size: 14px;
+  }
+  
+  .detail-field p {
+    font-size: 17px;
+  }
+}
 
-  /* detail view readability */
-  .detail-field p{font-size:17px}
+/* Small device loading spinner wrap logic */
+@media (max-width: 420px) {
+  .busy-box {
+    padding: 12px 12px;
+    gap: 10px;
+  }
+  .busy-box .spinner {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    border-width: 3px;
+  }
+  .busy-box .busy-text {
+    white-space: normal;
+    word-break: break-word;
+  }
+}
+
+/* Utility classes */
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.small {
+  font-size: 13px;
+}
+
+/* Reduced motion preference override values */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+/* --------------------------------------------------------------------------
+   13. PRINT-SPECIFIC CSS MEDIA OVERRIDES
+   -------------------------------------------------------------------------- */
+@media print {
+  body {
+    background: #fff;
+  }
+  .container {
+    max-width: 640px;
+    padding: 0;
+  }
+  .task-card {
+    box-shadow: none;
+    border-radius: 0;
+    padding: 8px;
+  }
+  .btn {
+    display: none;
+  }
+  .busy-overlay {
+    display: none !important;
+  }
 }

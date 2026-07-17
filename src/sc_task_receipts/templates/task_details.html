@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Task Details</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
@@ -8,7 +9,7 @@
 </head>
 <body>
 <div class="container">
-  <!-- header -->
+  <!-- 1. Header Layout -->
   <div class="header">
     <div style="display:flex;align-items:center;gap:12px">
       <h1 style="margin:0">Task Details</h1>
@@ -16,9 +17,10 @@
     <div class="sub">ID: {{ task.id }}</div>
   </div>
 
-  <!-- main detail card -->
+  <!-- 2. Main Details Form Grid -->
   <div class="detail-card">
     <div class="detail-grid">
+      <!-- Main Fields Area -->
       <div>
         <div class="detail-field">
           <h3>Title</h3>
@@ -51,8 +53,8 @@
         </div>
       </div>
 
+      <!-- Aside Metadata and Controls Panel -->
       <aside>
-
         <div class="detail-field">
           <h3>Printed</h3>        
           <p id="td-printed" class="small muted">{{ 'Yes' if task.printed else 'No' }}</p>
@@ -74,37 +76,49 @@
             <a class="btn" href="/">Go back</a>
           </div>
         </div>
-
       </aside>
     </div>
   </div>
 </div>
 
-<!-- Toast container -->
+<!-- 3. Toast alerts display area -->
 <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
 <script>
+/**
+ * Render notification toast overlays.
+ * 
+ * @param {string} type - Semantics mapping ('info', 'success', 'error').
+ * @param {string|object} message - Notification text string or parsed JSON object.
+ * @param {number} [duration=3000] - Screen lifespan milliseconds.
+ */
 function showToast(type, message, duration = 3000){
   const container = document.getElementById('toast-container');
   const t = document.createElement('div');
   t.className = `toast ${type} show`;
-  // ensure message is a string
+  
   let msg = message;
   if (typeof msg === 'object'){
     msg = msg && (msg.detail || msg.message) ? (msg.detail || msg.message) : JSON.stringify(msg);
   }
   t.textContent = msg;
   container.appendChild(t);
-  // longer for errors to match index behavior
+  
   const hideAfter = type === 'error' ? Math.max(duration, 5000) : duration;
   setTimeout(()=>{ t.classList.remove('show'); t.classList.add('hide'); }, hideAfter);
   setTimeout(()=>{ container.removeChild(t); }, hideAfter + 300);
 }
 
+/**
+ * Perform a POST fetch query helper against a designated endpoint path.
+ * 
+ * @param {string} path - URL endpoint string.
+ * @returns {Promise<object>} Parsed JSON response.
+ */
 async function apiPost(path){
   const res = await fetch(path, { method: 'POST' });
   let body = {};
-  try{ body = await res.json(); }catch(e){ /* no json */ }
+  try{ body = await res.json(); }catch(e){ /* body is not JSON */ }
   if(!res.ok){
     const msg = body.detail || body.message || `Request failed (status ${res.status})`;
     throw new Error(msg);
@@ -112,23 +126,23 @@ async function apiPost(path){
   return body;
 }
 
-// Polling: fetch updated task data and update DOM
-const TASK_API = '/api/v1' + window.location.pathname; // e.g. /tasks/<id>
-const POLL_INTERVAL = 8000; // ms
+// REST endpoints configuration
+const TASK_API = '/api/v1' + window.location.pathname; // Maps to e.g. /api/v1/tasks/<task_id>
+const POLL_INTERVAL = 8000;
 let pollTimer = null;
 
+/**
+ * Fetch fresh data updates of the current task from Notion and update page DOM properties.
+ */
 async function fetchAndUpdate(){
-  if (document.hidden) return; // skip when tab not visible
+  if (document.hidden) return; // Ignore background browser tabs
   try{
     const res = await fetch(TASK_API);
     if (!res.ok) return;
     const body = await res.json();
-    const t = body.data || body; // support different response shapes
-    // if data wrapped in object, adapt
-    const task = t.data ? t.data : (body.data ? body.data : (body || {}));
-    // support responses where task is directly returned as object
     const taskObj = body.data || body;
-    // update known fields if present
+    
+    // Update simple text tags in DOM
     if (taskObj.title !== undefined) document.getElementById('td-title').textContent = taskObj.title || '—';
     if (taskObj.project !== undefined) document.getElementById('td-project').textContent = taskObj.project || '—';
     if (taskObj.priority !== undefined) document.getElementById('td-priority').textContent = taskObj.priority || '—';
@@ -138,14 +152,22 @@ async function fetchAndUpdate(){
     if (taskObj.printed !== undefined) document.getElementById('td-printed').textContent = taskObj.printed ? 'Yes' : 'No';
     if (taskObj.done !== undefined) document.getElementById('td-done').textContent = taskObj.done ? 'Yes' : 'No';
 
-    // show/hide unprint button depending on printed state
+    // Conditionally show/hide unprint button target depending on current printed status
     const unprintBtn = document.getElementById('unprint');
     if (taskObj.printed){
       if (!unprintBtn){
         const actions = document.querySelector('.detail-field div[style]');
         const btn = document.createElement('button'); btn.id='unprint'; btn.className='btn'; btn.textContent='Unmark as Printed';
         actions.insertBefore(btn, actions.firstChild);
-        btn.addEventListener('click', async ()=>{ try{ const r = await apiPost(`/api/v1/tasks/{{ task.id }}/unprint`); showToast('success', r.message); setTimeout(()=>fetchAndUpdate(),600);}catch(e){showToast('error',e.message)} });
+        btn.addEventListener('click', async ()=>{
+          try{
+            const r = await apiPost(`/api/v1/tasks/{{ task.id }}/unprint`);
+            showToast('success', r.message);
+            setTimeout(()=>fetchAndUpdate(), 600);
+          }catch(e){
+            showToast('error', e.message);
+          }
+        });
       }
     } else {
       if (unprintBtn) unprintBtn.remove();
@@ -155,18 +177,18 @@ async function fetchAndUpdate(){
   }
 }
 
-// start polling
+// Start auto-refresh query routine
 pollTimer = setInterval(fetchAndUpdate, POLL_INTERVAL);
-// fetch once immediately
 fetchAndUpdate();
 
+// Register Action Listeners
 {% if task.printed %}
   document.getElementById('unprint').addEventListener('click', async () => {
     try {
       const result = await apiPost(`/api/v1/tasks/{{ task.id }}/unprint`);
       showToast('success', result.message);
       setTimeout(()=>fetchAndUpdate(), 600);
-    } catch (e) { showToast('error', e.message) }
+    } catch (e) { showToast('error', e.message); }
   });
 {% endif %}
 
@@ -175,7 +197,7 @@ document.getElementById('print').addEventListener('click', async () => {
     const result = await apiPost(`/api/v1/tasks/{{ task.id }}/print`);
     showToast('success', result.message);
     setTimeout(()=>fetchAndUpdate(), 600);
-  } catch (e) { showToast('error', e.message) }
+  } catch (e) { showToast('error', e.message); }
 });
 
 document.getElementById('done').addEventListener('click', async () => {
@@ -184,9 +206,8 @@ document.getElementById('done').addEventListener('click', async () => {
     const result = await apiPost(`/api/v1/tasks/{{ task.id }}/done`);
     showToast('success', result.message);
     setTimeout(()=>fetchAndUpdate(), 600);
-  } catch (e) { showToast('error', e.message) }
+  } catch (e) { showToast('error', e.message); }
 });
-
 </script>
 </body>
 </html>
