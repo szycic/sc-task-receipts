@@ -277,6 +277,12 @@ def get_tasks_to_print() -> list:
                         }
                     },
                     {
+                        "property": "Status",
+                        "status": {
+                            "does_not_equal": "Abandoned"
+                        }
+                    },
+                    {
                         "property": "Planned start",
                         "date": {
                             "on_or_before": today
@@ -296,6 +302,12 @@ def get_tasks_to_print() -> list:
                         "property": "Status",
                         "status": {
                             "does_not_equal": "Done"
+                        }
+                    },
+                    {
+                        "property": "Status",
+                        "status": {
+                            "does_not_equal": "Abandoned"
                         }
                     },
                     {
